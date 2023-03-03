@@ -9,8 +9,8 @@ pipeline {
 	stages {
 		stage('Build') {
 			steps {
-				callShell "docker-machine start default"
-				bat "docker-compose build --pull"
+				callShellStatus "docker-machine start default"
+				callShell "docker-compose build --pull"
 			}
 		}
 		stage('Deploy') {
@@ -18,7 +18,7 @@ pipeline {
 				branch 'main'
 			}
 			steps {
-				bat "docker version"
+				callShell "docker version"
 			}
 		}
     }
