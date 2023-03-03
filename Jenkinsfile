@@ -9,7 +9,7 @@ pipeline {
 	stages {
 		stage('Build') {
 			steps {
-				bat "docker-compose build --pull"
+				callShell "docker-compose build --pull"
 			}
 		}
 		stage('Deploy') {
@@ -17,7 +17,7 @@ pipeline {
 				branch 'main'
 			}
 			steps {
-				bat "docker version"
+				callShell "docker version"
 			}
 		}
     }
