@@ -1,0 +1,11 @@
+version: "3.7"
+
+services:
+    jenkins:
+        container_name: faulo-jenkins        
+        image: faulo/jenkins:latest
+        build:
+            context: .
+            dockerfile: jenkins.Dockerfile
+        privileged: true
+        user: root
