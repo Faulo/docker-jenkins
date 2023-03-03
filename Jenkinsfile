@@ -9,6 +9,7 @@ pipeline {
 	stages {
 		stage('Build') {
 			steps {
+				callShell "docker-machine start default"
 				callShell "docker-compose build --pull"
 			}
 		}
