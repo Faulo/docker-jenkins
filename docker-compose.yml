@@ -6,6 +6,6 @@ services:
         image: faulo/jenkins:latest
         build:
             context: .
-            dockerfile: jenkins.Dockerfile
+            dockerfile: Dockerfile
         privileged: true
         user: root
