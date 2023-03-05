@@ -11,7 +11,7 @@ pipeline {
 	stages {
 		stage('Build') {
 			steps {
-				callShell "docker-compose build --pull"
+				callShell "docker compose build --pull"
 			}
 		}
 		stage('Deploy') {
