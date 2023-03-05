@@ -11,7 +11,6 @@ pipeline {
 	stages {
 		stage('Build') {
 			steps {
-				callShellStatus "docker-machine start default"
 				callShell "docker-compose build --pull"
 			}
 		}
