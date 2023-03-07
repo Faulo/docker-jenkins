@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b2f626907d31b7290a3948a6f0f9253a",
+    "content-hash": "d1ccabfdbcfb45287b8cef92cdb5c8b9",
     "packages": [
         {
             "name": "guzzlehttp/psr7",
@@ -1434,16 +1434,16 @@
         },
         {
             "name": "slothsoft/unity",
-            "version": "2.4.6",
+            "version": "2.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Faulo/slothsoft-unity.git",
-                "reference": "14357e647c3e867827728067410d6cadef420fb8"
+                "reference": "7cc94a01ab952fd2afd5e70f21b3a9f3c1c088bf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Faulo/slothsoft-unity/zipball/14357e647c3e867827728067410d6cadef420fb8",
-                "reference": "14357e647c3e867827728067410d6cadef420fb8",
+                "url": "https://api.github.com/repos/Faulo/slothsoft-unity/zipball/7cc94a01ab952fd2afd5e70f21b3a9f3c1c088bf",
+                "reference": "7cc94a01ab952fd2afd5e70f21b3a9f3c1c088bf",
                 "shasum": ""
             },
             "require": {
@@ -1462,6 +1462,7 @@
                 "scripts/autoversion",
                 "scripts/steam-buildfile",
                 "scripts/unity-build",
+                "scripts/unity-documentation",
                 "scripts/unity-help",
                 "scripts/unity-method",
                 "scripts/unity-module-install",
@@ -1472,7 +1473,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-develop": "2.4.x-dev"
+                    "dev-develop": "2.5.x-dev"
                 }
             },
             "autoload": {
@@ -1502,9 +1503,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Faulo/slothsoft-unity/issues",
-                "source": "https://github.com/Faulo/slothsoft-unity/tree/2.4.6"
+                "source": "https://github.com/Faulo/slothsoft-unity/tree/2.5.0"
             },
-            "time": "2023-02-18T16:17:04+00:00"
+            "time": "2023-03-07T12:55:51+00:00"
         },
         {
             "name": "slothsoft/w3c",
