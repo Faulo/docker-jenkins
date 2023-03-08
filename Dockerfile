@@ -5,16 +5,29 @@ USER root
 # Linux Tools
 COPY machine-id /etc/machine-id
 RUN apt update
-RUN apt install -y apt-transport-https
-RUN apt install -y wget
-RUN apt install -y zip
-RUN apt install -y nano
+RUN apt install -y \
+	apt-transport-https \
+	wget \
+	zip \
+	nano \
+	curl
 
 # Jenkins
 RUN mkdir -m 777 /var/workspace
 
 # Git
 RUN apt install -y git
+
+# Docker
+RUN apt install -y \
+	ca-certificates \
+	gnupg2 \
+	software-properties-common
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+RUN add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
+RUN apt update
+RUN apt install -y docker-ce
+RUN usermod -aG docker jenkins
 
 # .NET SDK
 RUN wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
@@ -47,35 +60,37 @@ RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt install -y nodejs
 
 # PHP
-RUN apt install -y php7.4
-RUN apt install -y php-xsl
-RUN apt install -y php-fileinfo
-RUN apt install -y php-sockets
-RUN apt install -y php-exif
-RUN apt install -y php-intl
-RUN apt install -y php-dom
-RUN apt install -y php-zip
-RUN apt install -y php-curl
-RUN apt install -y php-mbstring
+RUN apt install -y \
+	php7.4 \
+	php-xsl \
+	php-fileinfo \
+	php-sockets \
+	php-exif \
+	php-intl \
+	php-dom \
+	php-zip \
+	php-curl \
+	php-mbstring
 
 # Unity
 RUN echo "deb https://hub.unity3d.com/linux/repos/deb stable main" > /etc/apt/sources.list.d/unityhub.list
 RUN wget https://hub.unity3d.com/linux/keys/public -O - | apt-key add -
 RUN apt update
-RUN apt install -y libgbm-dev
-RUN apt install -y libasound2
-RUN apt install -y libgconf-2-4
-RUN apt install -y libtinfo5
-RUN apt install -y libc6-dev
-RUN apt install -y libncurses5
-RUN apt install -y xvfb
-RUN apt install -y cpio
-RUN apt install -y p7zip-full
-RUN apt install -y blender
-RUN apt install -y ffmpeg
-RUN apt install -y python2
-RUN apt install -y python3
-RUN apt install -y unityhub
+RUN apt install -y \
+	libgbm-dev \
+	libasound2 \
+	libgconf-2-4 \
+	libtinfo5 \
+	libc6-dev \
+	libncurses5 \
+	xvfb \
+	cpio \
+	p7zip-full \
+	blender \
+	ffmpeg \
+	python2 \
+	python3 \
+	unityhub
 
 # Steam SDK
 RUN dpkg --add-architecture i386
