@@ -1434,16 +1434,16 @@
         },
         {
             "name": "slothsoft/unity",
-            "version": "2.5.3",
+            "version": "2.5.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Faulo/slothsoft-unity.git",
-                "reference": "fcc98c1cded6e2052507a72e89545dff6c2d870d"
+                "reference": "209e293dabdf991a406adfae06ea70187741fe48"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Faulo/slothsoft-unity/zipball/fcc98c1cded6e2052507a72e89545dff6c2d870d",
-                "reference": "fcc98c1cded6e2052507a72e89545dff6c2d870d",
+                "url": "https://api.github.com/repos/Faulo/slothsoft-unity/zipball/209e293dabdf991a406adfae06ea70187741fe48",
+                "reference": "209e293dabdf991a406adfae06ea70187741fe48",
                 "shasum": ""
             },
             "require": {
@@ -1503,9 +1503,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Faulo/slothsoft-unity/issues",
-                "source": "https://github.com/Faulo/slothsoft-unity/tree/2.5.3"
+                "source": "https://github.com/Faulo/slothsoft-unity/tree/2.5.4"
             },
-            "time": "2023-03-10T17:32:47+00:00"
+            "time": "2023-03-20T13:04:44+00:00"
         },
         {
             "name": "slothsoft/w3c",
