@@ -1083,25 +1083,25 @@
         },
         {
             "name": "psr/http-message",
-            "version": "1.0.1",
+            "version": "1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-fig/http-message.git",
-                "reference": "f6561bf28d520154e4b0ec72be95418abe6d9363"
+                "reference": "cb6ce4845ce34a8ad9e68117c10ee90a29919eba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/http-message/zipball/f6561bf28d520154e4b0ec72be95418abe6d9363",
-                "reference": "f6561bf28d520154e4b0ec72be95418abe6d9363",
+                "url": "https://api.github.com/repos/php-fig/http-message/zipball/cb6ce4845ce34a8ad9e68117c10ee90a29919eba",
+                "reference": "cb6ce4845ce34a8ad9e68117c10ee90a29919eba",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.3.0"
+                "php": "^7.2 || ^8.0"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.0.x-dev"
+                    "dev-master": "1.1.x-dev"
                 }
             },
             "autoload": {
@@ -1130,9 +1130,9 @@
                 "response"
             ],
             "support": {
-                "source": "https://github.com/php-fig/http-message/tree/master"
+                "source": "https://github.com/php-fig/http-message/tree/1.1"
             },
-            "time": "2016-08-06T14:39:51+00:00"
+            "time": "2023-04-04T09:50:52+00:00"
         },
         {
             "name": "psr/log",
@@ -1357,16 +1357,16 @@
         },
         {
             "name": "slothsoft/farah",
-            "version": "1.9.2",
+            "version": "1.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Faulo/slothsoft-farah.git",
-                "reference": "2b2ac04f5b549f51dadece8d9558840781d9bd70"
+                "reference": "e8878f3e1effa1a9b7270665cf6c67f2f388af55"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Faulo/slothsoft-farah/zipball/2b2ac04f5b549f51dadece8d9558840781d9bd70",
-                "reference": "2b2ac04f5b549f51dadece8d9558840781d9bd70",
+                "url": "https://api.github.com/repos/Faulo/slothsoft-farah/zipball/e8878f3e1effa1a9b7270665cf6c67f2f388af55",
+                "reference": "e8878f3e1effa1a9b7270665cf6c67f2f388af55",
                 "shasum": ""
             },
             "require": {
@@ -1398,7 +1398,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-develop": "1.9.x-dev"
+                    "dev-develop": "1.10.x-dev"
                 }
             },
             "autoload": {
@@ -1428,22 +1428,22 @@
             ],
             "support": {
                 "issues": "https://github.com/Faulo/slothsoft-farah/issues",
-                "source": "https://github.com/Faulo/slothsoft-farah/tree/1.9.2"
+                "source": "https://github.com/Faulo/slothsoft-farah/tree/1.10.0"
             },
-            "time": "2023-02-17T11:20:01+00:00"
+            "time": "2023-04-02T15:21:32+00:00"
         },
         {
             "name": "slothsoft/unity",
-            "version": "2.5.5",
+            "version": "2.5.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Faulo/slothsoft-unity.git",
-                "reference": "bbca8dd7dcec2e3299ad675b16309c13d791ee63"
+                "reference": "e85e311df515fa28970a294a81051c02bc687c7c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Faulo/slothsoft-unity/zipball/bbca8dd7dcec2e3299ad675b16309c13d791ee63",
-                "reference": "bbca8dd7dcec2e3299ad675b16309c13d791ee63",
+                "url": "https://api.github.com/repos/Faulo/slothsoft-unity/zipball/e85e311df515fa28970a294a81051c02bc687c7c",
+                "reference": "e85e311df515fa28970a294a81051c02bc687c7c",
                 "shasum": ""
             },
             "require": {
@@ -1503,9 +1503,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Faulo/slothsoft-unity/issues",
-                "source": "https://github.com/Faulo/slothsoft-unity/tree/2.5.5"
+                "source": "https://github.com/Faulo/slothsoft-unity/tree/2.5.6"
             },
-            "time": "2023-03-21T16:52:26+00:00"
+            "time": "2023-04-04T13:21:50+00:00"
         },
         {
             "name": "slothsoft/w3c",
@@ -1874,16 +1874,16 @@
         },
         {
             "name": "symfony/process",
-            "version": "v5.4.21",
+            "version": "v5.4.22",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/process.git",
-                "reference": "d4ce417ebcb0b7d090b4c178ed6d3accc518e8bd"
+                "reference": "4b850da0cc3a2a9181c1ed407adbca4733dc839b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/process/zipball/d4ce417ebcb0b7d090b4c178ed6d3accc518e8bd",
-                "reference": "d4ce417ebcb0b7d090b4c178ed6d3accc518e8bd",
+                "url": "https://api.github.com/repos/symfony/process/zipball/4b850da0cc3a2a9181c1ed407adbca4733dc839b",
+                "reference": "4b850da0cc3a2a9181c1ed407adbca4733dc839b",
                 "shasum": ""
             },
             "require": {
@@ -1916,7 +1916,7 @@
             "description": "Executes commands in sub-processes",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/process/tree/v5.4.21"
+                "source": "https://github.com/symfony/process/tree/v5.4.22"
             },
             "funding": [
                 {
@@ -1932,7 +1932,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-02-21T19:46:44+00:00"
+            "time": "2023-03-06T21:29:33+00:00"
         }
     ],
     "packages-dev": [],
