@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "guzzlehttp/psr7",
-            "version": "1.9.0",
+            "version": "1.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "e98e3e6d4f86621a9b75f623996e6bbdeb4b9318"
+                "reference": "e4490cabc77465aaee90b20cfc9a770f8c04be6b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/e98e3e6d4f86621a9b75f623996e6bbdeb4b9318",
-                "reference": "e98e3e6d4f86621a9b75f623996e6bbdeb4b9318",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/e4490cabc77465aaee90b20cfc9a770f8c04be6b",
+                "reference": "e4490cabc77465aaee90b20cfc9a770f8c04be6b",
                 "shasum": ""
             },
             "require": {
@@ -36,11 +36,6 @@
                 "laminas/laminas-httphandlerrunner": "Emit PSR-7 responses"
             },
             "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "1.9-dev"
-                }
-            },
             "autoload": {
                 "files": [
                     "src/functions_include.php"
@@ -98,7 +93,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/psr7/issues",
-                "source": "https://github.com/guzzle/psr7/tree/1.9.0"
+                "source": "https://github.com/guzzle/psr7/tree/1.9.1"
             },
             "funding": [
                 {
@@ -114,7 +109,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-06-20T21:43:03+00:00"
+            "time": "2023-04-17T16:00:37+00:00"
         },
         {
             "name": "krakjoe/pthreads-polyfill",
@@ -1434,16 +1429,16 @@
         },
         {
             "name": "slothsoft/unity",
-            "version": "2.6.3",
+            "version": "2.6.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Faulo/slothsoft-unity.git",
-                "reference": "130b2ba8561628b99a2e58cd213ea82ccb84358d"
+                "reference": "3da0f023656108e0b351ae771f7e80ab5bdd6714"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Faulo/slothsoft-unity/zipball/130b2ba8561628b99a2e58cd213ea82ccb84358d",
-                "reference": "130b2ba8561628b99a2e58cd213ea82ccb84358d",
+                "url": "https://api.github.com/repos/Faulo/slothsoft-unity/zipball/3da0f023656108e0b351ae771f7e80ab5bdd6714",
+                "reference": "3da0f023656108e0b351ae771f7e80ab5bdd6714",
                 "shasum": ""
             },
             "require": {
@@ -1503,9 +1498,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Faulo/slothsoft-unity/issues",
-                "source": "https://github.com/Faulo/slothsoft-unity/tree/2.6.3"
+                "source": "https://github.com/Faulo/slothsoft-unity/tree/2.6.4"
             },
-            "time": "2023-04-14T15:01:19+00:00"
+            "time": "2023-04-18T08:48:06+00:00"
         },
         {
             "name": "slothsoft/w3c",
