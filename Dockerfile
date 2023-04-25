@@ -114,7 +114,7 @@ RUN chmod -R 777 /bin
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY unity/composer.* /var/unity/
 RUN chmod -R 777 /var/unity
-ENV COMPOSE_UNITY "composer -d /var/unity exec"
+ENV COMPOSE_UNITY "composer -d /var/unity"
 
 USER jenkins
 
