@@ -83,6 +83,7 @@ RUN apt install -y \
 	libtinfo5 \
 	libc6-dev \
 	libncurses5 \
+	libglu1 \
 	xvfb \
 	cpio \
 	p7zip-full \
