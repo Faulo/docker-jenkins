@@ -5,7 +5,7 @@
 		]
 	},
 	"require" : {
-		"slothsoft/unity" : "^2.6"
+		"slothsoft/unity" : "^2.7"
 	},
 	"config" : {
 		"process-timeout" : 3600

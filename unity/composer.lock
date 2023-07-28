@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b8a20d7e22dcaeb5c8c07eebed21c9ef",
+    "content-hash": "2d0dc07015bbd0859b5b57fe957a9e68",
     "packages": [
         {
             "name": "guzzlehttp/psr7",
@@ -1429,16 +1429,16 @@
         },
         {
             "name": "slothsoft/unity",
-            "version": "2.6.4",
+            "version": "2.7.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Faulo/slothsoft-unity.git",
-                "reference": "3da0f023656108e0b351ae771f7e80ab5bdd6714"
+                "reference": "128ece2fa4ec70f255d60ad8d4f28bc370561296"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Faulo/slothsoft-unity/zipball/3da0f023656108e0b351ae771f7e80ab5bdd6714",
-                "reference": "3da0f023656108e0b351ae771f7e80ab5bdd6714",
+                "url": "https://api.github.com/repos/Faulo/slothsoft-unity/zipball/128ece2fa4ec70f255d60ad8d4f28bc370561296",
+                "reference": "128ece2fa4ec70f255d60ad8d4f28bc370561296",
                 "shasum": ""
             },
             "require": {
@@ -1462,6 +1462,7 @@
                 "scripts/unity-method",
                 "scripts/unity-module-install",
                 "scripts/unity-package-install",
+                "scripts/unity-project-setting",
                 "scripts/unity-project-version",
                 "scripts/unity-tests"
             ],
@@ -1498,9 +1499,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Faulo/slothsoft-unity/issues",
-                "source": "https://github.com/Faulo/slothsoft-unity/tree/2.6.4"
+                "source": "https://github.com/Faulo/slothsoft-unity/tree/2.7.1"
             },
-            "time": "2023-04-18T08:48:06+00:00"
+            "time": "2023-07-28T12:15:53+00:00"
         },
         {
             "name": "slothsoft/w3c",
