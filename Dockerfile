@@ -60,8 +60,11 @@ RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt install -y nodejs
 
 # PHP
+RUN apt install -y software-properties-common
+RUN add-apt-repository ppa:ondrej/php
+RUN apt update
 RUN apt install -y \
-	php8.0 \
+	php7.4 \
 	php-xsl \
 	php-fileinfo \
 	php-sockets \
