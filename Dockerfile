@@ -61,7 +61,7 @@ RUN apt install -y nodejs
 
 # PHP
 RUN apt install -y \
-	php7.4 \
+	php8.0 \
 	php-xsl \
 	php-fileinfo \
 	php-sockets \
