@@ -22,7 +22,8 @@ RUN apt install -y git
 RUN apt install -y \
 	ca-certificates \
 	gnupg2 \
-	software-properties-common
+	software-properties-common \
+	lsb-release
 RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
 RUN add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
 RUN apt update
@@ -60,8 +61,10 @@ RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt install -y nodejs
 
 # PHP
+RUN add-apt-repository ppa:ondrej/php
+RUN apt update
 RUN apt install -y \
-	php8.1 \
+	php7.4 \
 	php-xsl \
 	php-fileinfo \
 	php-sockets \
