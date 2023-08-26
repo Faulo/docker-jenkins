@@ -60,7 +60,7 @@ RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt install -y nodejs
 
 # PHP
-RUN add-apt-repository ppa:ondrej/php
+RUN add-apt-repository "ppa:ondrej/php"
 RUN apt update
 RUN apt install -y \
 	php7.4 \
