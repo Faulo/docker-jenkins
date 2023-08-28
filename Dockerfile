@@ -96,8 +96,8 @@ RUN apt install -y \
 RUN dpkg --add-architecture i386
 RUN apt update
 RUN apt install -y lib32gcc-s1
-COPY steam/steamcmd /bin
-RUN chmod -R 777 /bin
+COPY steam/steamcmd /usr/local/bin
+RUN chmod -R 777 /usr/local/bin
 RUN steamcmd --help
 # COPY steam/sdk /var/steam
 # RUN chmod -R 777 /var/steam
@@ -107,8 +107,8 @@ RUN steamcmd --help
 RUN apt upgrade -y
 
 # itch.io
-COPY itch.io/butler /bin
-RUN chmod -R 777 /bin
+COPY itch.io/butler /usr/local/bin
+RUN chmod -R 777 /usr/local/bin
 
 # Farah
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -119,4 +119,4 @@ ENV COMPOSE_UNITY "composer -d /var/unity"
 USER jenkins
 
 # Farah
-RUN composer -d /var/unity install --no-dev
+RUN composer -d /var/unity update --no-dev
