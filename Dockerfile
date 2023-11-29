@@ -34,6 +34,8 @@ RUN wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod
 RUN dpkg -i packages-microsoft-prod.deb
 RUN rm packages-microsoft-prod.deb
 RUN apt update
+RUN apt install -y dotnet-sdk-6.0
+RUN apt install -y dotnet-sdk-7.0
 RUN apt install -y dotnet-sdk-8.0
 
 # DocFX
