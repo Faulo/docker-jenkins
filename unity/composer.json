@@ -8,7 +8,7 @@
 		"slothsoft/unity" : "^2.7"
 	},
 	"config" : {
-		"process-timeout" : 3600
+		"process-timeout" : 14400
 	},
 	"name" : "slothsoft/jenkins",
 	"description" : "Bridge between Jenkins and building+testing Unity",
