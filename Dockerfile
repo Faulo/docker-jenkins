@@ -90,6 +90,7 @@ RUN apt install -y \
 	p7zip-full \
 	blender \
 	ffmpeg \
+	python2 \
 	python3 \
 	unityhub
 
