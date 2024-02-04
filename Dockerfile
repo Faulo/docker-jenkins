@@ -92,6 +92,7 @@ RUN apt install -y \
 	ffmpeg \
 	python3 \
 	unityhub
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT "1"
 
 # Unity 2021 openssl compatibility
 RUN wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
