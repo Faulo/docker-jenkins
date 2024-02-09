@@ -12,6 +12,7 @@ RUN apt install -y \
 	wget \
 	zip \
 	nano \
+	gnupg2 \
 	curl
 
 # Jenkins
