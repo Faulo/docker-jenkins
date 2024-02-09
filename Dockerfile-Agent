@@ -1,7 +1,5 @@
 FROM jenkins/agent:jdk11
 
-ENTRYPOINT ["/bin/bash"]
-
 USER root
 
 # Linux Tools
