@@ -1,5 +1,7 @@
 FROM jenkins/agent:jdk11
 
+ENTRYPOINT ["/bin/bash"]
+
 USER root
 
 # Linux Tools
@@ -17,17 +19,6 @@ RUN mkdir -m 777 /var/workspace
 
 # Git
 RUN apt install -y git
-
-# Docker
-RUN apt install -y \
-	ca-certificates \
-	gnupg2 \
-	software-properties-common
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
-RUN add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
-RUN apt update
-RUN apt install -y docker-ce
-RUN usermod -aG docker jenkins
 
 # .NET SDK
 RUN wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
