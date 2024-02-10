@@ -90,6 +90,8 @@ RUN apt install -y \
 	blender \
 	ffmpeg \
 	python3 \
+	apparmor \
+	xz-utils \
 	unityhub
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1"
 ENV JAVA_OPTS="-Dhudson.model.DirectoryBrowserSupport.CSP=\"\""
