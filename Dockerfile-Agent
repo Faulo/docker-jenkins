@@ -13,9 +13,6 @@ RUN apt install -y \
 	gnupg2 \
 	curl
 
-# Jenkins
-RUN mkdir -m 777 /var/workspace
-
 # Git
 RUN apt install -y git
 
@@ -113,8 +110,6 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY unity/composer.* /var/unity/
 RUN chmod -R 777 /var/unity
 ENV COMPOSE_UNITY "composer -d /var/unity"
-
-USER jenkins
 
 # Farah
 RUN composer -d /var/unity update --no-dev
