@@ -11,6 +11,8 @@ RUN apt install -y \
 	zip \
 	nano \
 	gnupg2 \
+	ca-certificates \
+	software-properties-common \
 	curl
 
 # Git
