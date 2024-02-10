@@ -28,14 +28,14 @@ RUN apt install -y dotnet-sdk-8.0
 # DocFX
 RUN dotnet tool update -g docfx
 RUN apt install -y mono-devel
-ENV FrameworkPathOverride "/usr/lib/mono/4.7.1-api/"
+ENV FrameworkPathOverride="/usr/lib/mono/4.7.1-api/"
 
 # Android SDK+NDK
 # RUN apt install -y android-sdk
 # COPY --from=bitriseio/android-ndk /opt/android-sdk-linux /opt/android-sdk-linux
 # COPY --from=bitriseio/android-ndk /opt/android-ndk /opt/android-ndk
-# ENV ANDROID_SDK_ROOT /opt/android-sdk-linux
-# ENV ANDROID_NDK_ROOT /opt/android-ndk
+# ENV ANDROID_SDK_ROOT="/opt/android-sdk-linux"
+# ENV ANDROID_NDK_ROOT="/opt/android-ndk"
 
 # Plastic
 RUN echo "deb https://www.plasticscm.com/plasticrepo/stable/ubuntu/ ./" > /etc/apt/sources.list.d/plasticscm-stable.list
@@ -109,7 +109,8 @@ RUN chmod -R 777 /usr/local/bin
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY unity/composer.* /var/unity/
 RUN chmod -R 777 /var/unity
-ENV COMPOSE_UNITY "composer -d /var/unity"
+ENV COMPOSE_UNITY="composer -d /var/unity"
+ENV COMPOSER_ALLOW_SUPERUSER="1"
 
 # Farah
 RUN composer -d /var/unity update --no-dev
