@@ -1,4 +1,4 @@
-FROM jenkins/inbound-agent:jdk11
+FROM jenkins/jenkins:lts-jdk11
 
 USER root
 
@@ -116,3 +116,6 @@ ENV COMPOSER_ALLOW_SUPERUSER="1"
 
 # Farah
 RUN composer -d /var/unity update --no-dev
+
+ENTRYPOINT []
+CMD []
