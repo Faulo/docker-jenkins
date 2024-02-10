@@ -21,6 +21,12 @@ RUN mkdir -m 777 /var/workspace
 # Git
 RUN apt install -y git
 
+# Plastic
+RUN echo "deb https://www.plasticscm.com/plasticrepo/stable/ubuntu/ ./" > /etc/apt/sources.list.d/plasticscm-stable.list
+RUN wget https://www.plasticscm.com/plasticrepo/stable/ubuntu/Release.key -O - | apt-key add -
+RUN apt update
+RUN apt install -y plasticscm-client-core
+
 # Docker
 RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
 RUN add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
@@ -48,12 +54,6 @@ ENV FrameworkPathOverride="/usr/lib/mono/4.7.1-api/"
 # COPY --from=bitriseio/android-ndk /opt/android-ndk /opt/android-ndk
 # ENV ANDROID_SDK_ROOT="/opt/android-sdk-linux"
 # ENV ANDROID_NDK_ROOT="/opt/android-ndk"
-
-# Plastic
-RUN echo "deb https://www.plasticscm.com/plasticrepo/stable/ubuntu/ ./" > /etc/apt/sources.list.d/plasticscm-stable.list
-RUN wget https://www.plasticscm.com/plasticrepo/stable/ubuntu/Release.key -O - | apt-key add -
-RUN apt update
-RUN apt install -y plasticscm-client-core
 
 # NodeJS
 RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -

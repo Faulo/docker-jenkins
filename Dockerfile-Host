@@ -1,0 +1,41 @@
+FROM jenkins/jenkins:lts-jdk11
+
+USER root
+
+# Linux Tools
+COPY machine-id /etc/machine-id
+RUN apt update
+RUN apt install -y \
+	apt-transport-https \
+	wget \
+	zip \
+	nano \
+	gnupg2 \
+	ca-certificates \
+	software-properties-common \
+	curl
+
+# Jenkins
+RUN mkdir -m 777 /var/workspace
+ENV JAVA_OPTS="-Dhudson.model.DirectoryBrowserSupport.CSP=\"\""
+
+# Git
+RUN apt install -y git
+
+# Plastic
+RUN echo "deb https://www.plasticscm.com/plasticrepo/stable/ubuntu/ ./" > /etc/apt/sources.list.d/plasticscm-stable.list
+RUN wget https://www.plasticscm.com/plasticrepo/stable/ubuntu/Release.key -O - | apt-key add -
+RUN apt update
+RUN apt install -y plasticscm-client-core
+
+# Docker
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+RUN add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
+RUN apt update
+RUN apt install -y docker-ce
+RUN usermod -aG docker jenkins
+
+# Linux Tools
+RUN apt upgrade -y
+
+USER jenkins

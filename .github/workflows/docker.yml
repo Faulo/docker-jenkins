@@ -29,7 +29,14 @@ jobs:
           tags: faulo/jenkins-agent:latest
           file: Dockerfile-Agent
       -
-        name: Build and push controller
+        name: Build and push host
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: faulo/jenkins-host:latest
+          file: Dockerfile-Host
+      -
+        name: Build and push singleton Jenkins
         uses: docker/build-push-action@v5
         with:
           push: true
