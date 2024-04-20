@@ -712,16 +712,16 @@
         },
         {
             "name": "matthiasmullie/minify",
-            "version": "1.3.71",
+            "version": "1.3.73",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matthiasmullie/minify.git",
-                "reference": "ae42a47d7fecc1fbb7277b2f2d84c37a33edc3b1"
+                "reference": "cb7a9297b4ab070909cefade30ee95054d4ae87a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matthiasmullie/minify/zipball/ae42a47d7fecc1fbb7277b2f2d84c37a33edc3b1",
-                "reference": "ae42a47d7fecc1fbb7277b2f2d84c37a33edc3b1",
+                "url": "https://api.github.com/repos/matthiasmullie/minify/zipball/cb7a9297b4ab070909cefade30ee95054d4ae87a",
+                "reference": "cb7a9297b4ab070909cefade30ee95054d4ae87a",
                 "shasum": ""
             },
             "require": {
@@ -771,7 +771,7 @@
             ],
             "support": {
                 "issues": "https://github.com/matthiasmullie/minify/issues",
-                "source": "https://github.com/matthiasmullie/minify/tree/1.3.71"
+                "source": "https://github.com/matthiasmullie/minify/tree/1.3.73"
             },
             "funding": [
                 {
@@ -779,7 +779,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-04-25T20:33:03+00:00"
+            "time": "2024-03-15T10:27:10+00:00"
         },
         {
             "name": "matthiasmullie/path-converter",
@@ -1229,16 +1229,16 @@
         },
         {
             "name": "slothsoft/blob",
-            "version": "1.1.0",
+            "version": "1.1.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Faulo/slothsoft-blob.git",
-                "reference": "8e1dcc6815e5e7fb3b9e67f38a8defb74c7b0e1c"
+                "reference": "84ffd31925b41b85c09435f8bddfd07f90b54acf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Faulo/slothsoft-blob/zipball/8e1dcc6815e5e7fb3b9e67f38a8defb74c7b0e1c",
-                "reference": "8e1dcc6815e5e7fb3b9e67f38a8defb74c7b0e1c",
+                "url": "https://api.github.com/repos/Faulo/slothsoft-blob/zipball/84ffd31925b41b85c09435f8bddfd07f90b54acf",
+                "reference": "84ffd31925b41b85c09435f8bddfd07f90b54acf",
                 "shasum": ""
             },
             "require": {
@@ -1252,7 +1252,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-develop": "1.0.x-dev"
+                    "dev-develop": "1.1.x-dev"
                 }
             },
             "autoload": {
@@ -1281,22 +1281,22 @@
             ],
             "support": {
                 "issues": "https://github.com/Faulo/slothsoft-blob/issues",
-                "source": "https://github.com/Faulo/slothsoft-blob/tree/1.1.0"
+                "source": "https://github.com/Faulo/slothsoft-blob/tree/1.1.3"
             },
-            "time": "2023-08-28T15:31:08+00:00"
+            "time": "2024-03-31T23:21:23+00:00"
         },
         {
             "name": "slothsoft/core",
-            "version": "1.11.0",
+            "version": "1.11.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Faulo/slothsoft-core.git",
-                "reference": "65f086f91054cb00753b5ecdce561b39610d85be"
+                "reference": "0df253da7d27bbcbded2ae008fca68da56b3348a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Faulo/slothsoft-core/zipball/65f086f91054cb00753b5ecdce561b39610d85be",
-                "reference": "65f086f91054cb00753b5ecdce561b39610d85be",
+                "url": "https://api.github.com/repos/Faulo/slothsoft-core/zipball/0df253da7d27bbcbded2ae008fca68da56b3348a",
+                "reference": "0df253da7d27bbcbded2ae008fca68da56b3348a",
                 "shasum": ""
             },
             "require": {
@@ -1321,7 +1321,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-develop": "1.10.x-dev"
+                    "dev-develop": "1.11.x-dev"
                 }
             },
             "autoload": {
@@ -1350,22 +1350,22 @@
             ],
             "support": {
                 "issues": "https://github.com/Faulo/slothsoft-core/issues",
-                "source": "https://github.com/Faulo/slothsoft-core/tree/1.11.0"
+                "source": "https://github.com/Faulo/slothsoft-core/tree/1.11.4"
             },
-            "time": "2023-08-28T15:30:02+00:00"
+            "time": "2024-04-12T15:07:46+00:00"
         },
         {
             "name": "slothsoft/farah",
-            "version": "1.11.0",
+            "version": "1.11.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Faulo/slothsoft-farah.git",
-                "reference": "2271640680b7177bdb94c451763c232fb755f661"
+                "reference": "9d49fd0d2de00daf2ff3bddfc851164cd866c370"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Faulo/slothsoft-farah/zipball/2271640680b7177bdb94c451763c232fb755f661",
-                "reference": "2271640680b7177bdb94c451763c232fb755f661",
+                "url": "https://api.github.com/repos/Faulo/slothsoft-farah/zipball/9d49fd0d2de00daf2ff3bddfc851164cd866c370",
+                "reference": "9d49fd0d2de00daf2ff3bddfc851164cd866c370",
                 "shasum": ""
             },
             "require": {
@@ -1427,22 +1427,22 @@
             ],
             "support": {
                 "issues": "https://github.com/Faulo/slothsoft-farah/issues",
-                "source": "https://github.com/Faulo/slothsoft-farah/tree/1.11.0"
+                "source": "https://github.com/Faulo/slothsoft-farah/tree/1.11.2"
             },
-            "time": "2023-08-28T15:39:43+00:00"
+            "time": "2024-03-31T23:16:58+00:00"
         },
         {
             "name": "slothsoft/unity",
-            "version": "2.9.0",
+            "version": "2.9.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Faulo/slothsoft-unity.git",
-                "reference": "8f13b3926a398e6158309b2e6969b3b29f402d0d"
+                "reference": "7169114c72b759633333992e518dea2d54b80d08"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Faulo/slothsoft-unity/zipball/8f13b3926a398e6158309b2e6969b3b29f402d0d",
-                "reference": "8f13b3926a398e6158309b2e6969b3b29f402d0d",
+                "url": "https://api.github.com/repos/Faulo/slothsoft-unity/zipball/7169114c72b759633333992e518dea2d54b80d08",
+                "reference": "7169114c72b759633333992e518dea2d54b80d08",
                 "shasum": ""
             },
             "require": {
@@ -1503,22 +1503,22 @@
             ],
             "support": {
                 "issues": "https://github.com/Faulo/slothsoft-unity/issues",
-                "source": "https://github.com/Faulo/slothsoft-unity/tree/2.9.0"
+                "source": "https://github.com/Faulo/slothsoft-unity/tree/2.9.2"
             },
-            "time": "2024-03-12T15:05:33+00:00"
+            "time": "2024-04-20T15:49:33+00:00"
         },
         {
             "name": "slothsoft/w3c",
-            "version": "1.2.0",
+            "version": "1.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Faulo/slothsoft-w3c.git",
-                "reference": "2da5c45d2b937c2bc35c8e9a4d5322507351ae06"
+                "reference": "ebfe0b99ebf902163e744d42449f5bdbb12347b1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Faulo/slothsoft-w3c/zipball/2da5c45d2b937c2bc35c8e9a4d5322507351ae06",
-                "reference": "2da5c45d2b937c2bc35c8e9a4d5322507351ae06",
+                "url": "https://api.github.com/repos/Faulo/slothsoft-w3c/zipball/ebfe0b99ebf902163e744d42449f5bdbb12347b1",
+                "reference": "ebfe0b99ebf902163e744d42449f5bdbb12347b1",
                 "shasum": ""
             },
             "require": {
@@ -1530,7 +1530,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-develop": "1.1.x-dev"
+                    "dev-develop": "1.2.x-dev"
                 }
             },
             "autoload": {
@@ -1556,22 +1556,22 @@
             ],
             "support": {
                 "issues": "https://github.com/Faulo/slothsoft-w3c/issues",
-                "source": "https://github.com/Faulo/slothsoft-w3c/tree/1.2.0"
+                "source": "https://github.com/Faulo/slothsoft-w3c/tree/1.2.2"
             },
-            "time": "2023-08-28T15:29:10+00:00"
+            "time": "2024-03-31T23:20:32+00:00"
         },
         {
             "name": "symfony/filesystem",
-            "version": "v5.4.35",
+            "version": "v5.4.38",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/filesystem.git",
-                "reference": "5a553607d4ffbfa9c0ab62facadea296c9db7086"
+                "reference": "899330a01056077271e2f614c7b28b0379a671eb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/filesystem/zipball/5a553607d4ffbfa9c0ab62facadea296c9db7086",
-                "reference": "5a553607d4ffbfa9c0ab62facadea296c9db7086",
+                "url": "https://api.github.com/repos/symfony/filesystem/zipball/899330a01056077271e2f614c7b28b0379a671eb",
+                "reference": "899330a01056077271e2f614c7b28b0379a671eb",
                 "shasum": ""
             },
             "require": {
@@ -1606,7 +1606,7 @@
             "description": "Provides basic utilities for the filesystem",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/filesystem/tree/v5.4.35"
+                "source": "https://github.com/symfony/filesystem/tree/v5.4.38"
             },
             "funding": [
                 {
@@ -1622,7 +1622,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-01-23T13:51:25+00:00"
+            "time": "2024-03-21T08:05:07+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
