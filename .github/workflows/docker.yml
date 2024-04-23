@@ -22,7 +22,14 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Build and push agent
+        name: Build and push unity agent
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: faulo/jenkins-unity:latest
+          file: Dockerfile-Unity
+      -
+        name: Build and push cloud agent
         uses: docker/build-push-action@v5
         with:
           push: true
