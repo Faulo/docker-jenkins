@@ -127,4 +127,4 @@ ENV COMPOSER_ALLOW_SUPERUSER="1"
 # Farah
 RUN composer -d /var/unity update --no-dev
 
-ENTRYPOINT vncserver && curl -sO $JENKINS_HOST/jnlpJars/agent.jar && java -jar agent.jar -url $JENKINS_HOST -secret $JENKINS_SECRET -name "$JENKINS_AGENT" -workDir "$JENKINS_WORKSPACE"
+ENTRYPOINT curl -sO $JENKINS_HOST/jnlpJars/agent.jar && java -jar agent.jar -url $JENKINS_HOST -secret $JENKINS_SECRET -name "$JENKINS_AGENT" -workDir "$JENKINS_WORKSPACE"
