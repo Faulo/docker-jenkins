@@ -1,4 +1,4 @@
-FROM jenkins/jenkins:lts-jdk11
+FROM openjdk:21-bookworm
 
 USER root
 
