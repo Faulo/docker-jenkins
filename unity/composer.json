@@ -10,7 +10,7 @@
 	"config" : {
 		"process-timeout" : 14400
 	},
-	"name" : "slothsoft/jenkins",
+	"name" : "slothsoft/unity-bridge",
 	"description" : "Bridge between Jenkins and building+testing Unity",
-	"type" : "library"
+	"type" : "metapackage"
 }
