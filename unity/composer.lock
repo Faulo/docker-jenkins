@@ -1433,16 +1433,16 @@
         },
         {
             "name": "slothsoft/unity",
-            "version": "2.9.2",
+            "version": "2.11.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Faulo/slothsoft-unity.git",
-                "reference": "7169114c72b759633333992e518dea2d54b80d08"
+                "reference": "6f9c45678157cf640500b770da14bff8a8168b6a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Faulo/slothsoft-unity/zipball/7169114c72b759633333992e518dea2d54b80d08",
-                "reference": "7169114c72b759633333992e518dea2d54b80d08",
+                "url": "https://api.github.com/repos/Faulo/slothsoft-unity/zipball/6f9c45678157cf640500b770da14bff8a8168b6a",
+                "reference": "6f9c45678157cf640500b770da14bff8a8168b6a",
                 "shasum": ""
             },
             "require": {
@@ -1468,12 +1468,13 @@
                 "scripts/unity-package-install",
                 "scripts/unity-project-setting",
                 "scripts/unity-project-version",
-                "scripts/unity-tests"
+                "scripts/unity-tests",
+                "scripts/transform-dotnet-format"
             ],
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-develop": "2.9.x-dev"
+                    "dev-develop": "2.11.x-dev"
                 }
             },
             "autoload": {
@@ -1503,9 +1504,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Faulo/slothsoft-unity/issues",
-                "source": "https://github.com/Faulo/slothsoft-unity/tree/2.9.2"
+                "source": "https://github.com/Faulo/slothsoft-unity/tree/2.11.2"
             },
-            "time": "2024-04-20T15:49:33+00:00"
+            "time": "2024-05-31T15:33:19+00:00"
         },
         {
             "name": "slothsoft/w3c",
