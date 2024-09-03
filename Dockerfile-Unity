@@ -16,7 +16,9 @@ RUN apt install -y \
 	curl
 
 # Git
-RUN apt install -y git
+RUN apt install -y \
+	git \
+	git-lfs
 
 # Plastic
 RUN echo "deb https://www.plasticscm.com/plasticrepo/stable/ubuntu/ ./" > /etc/apt/sources.list.d/plasticscm-stable.list
