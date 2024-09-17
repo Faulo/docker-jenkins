@@ -24,6 +24,7 @@ RUN echo "deb https://www.plasticscm.com/plasticrepo/stable/ubuntu/ ./" > /etc/a
 RUN wget https://www.plasticscm.com/plasticrepo/stable/ubuntu/Release.key -O - | apt-key add -
 RUN apt update
 RUN apt install -y plasticscm-client-core
+RUN cm configure
 
 # NodeJS
 RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
