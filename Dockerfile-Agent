@@ -115,4 +115,4 @@ ENV COMPOSE_UNITY="composer -d /var/unity"
 ENV COMPOSER_ALLOW_SUPERUSER="1"
 
 # Farah
-RUN composer -d /var/unity update --no-dev
+RUN composer -d /var/unity update --no-interaction --no-dev --optimize-autoloader --classmap-authoritative
