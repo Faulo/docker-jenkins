@@ -10,12 +10,13 @@ RUN unzip butler.zip
 RUN chmod +x butler
 RUN mv butler /usr/local/bin
 RUN rm butler.zip
+RUN butler --help
 
 # Steam SDK
 RUN dpkg --add-architecture i386
 RUN apt update
 RUN apt install -y lib32gcc-s1
-COPY steam/steamcmd /usr/local/bin
+COPY steamcmd /usr/local/bin/
 RUN chmod +x /usr/local/bin/steamcmd
 RUN steamcmd --help
 
@@ -33,11 +34,11 @@ RUN apt install -y \
 	php-mbstring
 
 # Farah
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-COPY unity/composer.* /var/unity/
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+COPY unity/composer.json /var/unity/
+COPY unity/compose-unity /usr/local/bin/
+RUN chmod +x /usr/local/bin/compose-unity
 RUN chmod -R 777 /var/unity
 ENV COMPOSE_UNITY="composer -d /var/unity"
 ENV COMPOSER_ALLOW_SUPERUSER="1"
-
-# Farah
-RUN composer -d /var/unity update --no-dev
+RUN compose-unity update --no-dev
