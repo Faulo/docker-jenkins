@@ -1,5 +1,20 @@
-# Docker Image: Jenkins with Unity
+# Jenkins Agents as Docker Images
 
-This image builds a jenkins master node with all dependencies to set up continuous delivery for Unity.
+This repository contains Dockerfiles to build several different Jenkins agents. All of them can be used the same as jenkins/inbound-agent.
 
-Included are a clients for Git and Plastic, DotNet 6 and 7, Unity Hub, and an installation of [slothsoft/unity](https://github.com/Faulo/slothsoft-unity) to process the ci pipeline.
+## basic-agent
+This agent contains:
+- A Java installation.
+- A Git client.
+- A Plastic client.
+
+## ci-agent
+This agent contains everything above as well as:
+- A Steam client (steamcmd).
+- An Itch.io client (butler).
+- An installation of [slothsoft/unity](https://github.com/Faulo/slothsoft-unity) (compose-unity).
+
+## unity-agent
+This agent contains everything above as well as:
+- A Unity Hub installation.
+- A .NET installation.
