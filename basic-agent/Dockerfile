@@ -29,6 +29,7 @@ RUN apt install -y plasticscm-client-core
 RUN apt upgrade -y
 
 # Jenkins
+WORKDIR /var
 COPY jenkins-agent /usr/local/bin/jenkins-agent
 RUN chmod +x /usr/local/bin/jenkins-agent
 ENTRYPOINT ["/usr/local/bin/jenkins-agent"]
