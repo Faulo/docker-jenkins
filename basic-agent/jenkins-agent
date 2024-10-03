@@ -120,7 +120,7 @@ else
 		case "$@" in
 			*"${JENKINS_AGENT_NAME}"*) echo "Warning: AGENT_NAME is defined twice in command-line arguments and the environment variable" ;;
 			*)
-			AGENT_NAME="-name \"${JENKINS_AGENT_NAME}\"" ;;
+			AGENT_NAME="-name ${JENKINS_AGENT_NAME}" ;;
 		esac
 	fi
 
