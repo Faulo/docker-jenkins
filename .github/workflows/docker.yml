@@ -26,33 +26,5 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: faulo/npm-agent:latest
-          file: Dockerfile-NPM
-      -
-        name: Build and push unity agent
-        uses: docker/build-push-action@v5
-        with:
-          push: true
-          tags: faulo/jenkins-unity:latest
-          file: Dockerfile-Unity
-      -
-        name: Build and push cloud agent
-        uses: docker/build-push-action@v5
-        with:
-          push: true
-          tags: faulo/jenkins-agent:latest
-          file: Dockerfile-Agent
-      -
-        name: Build and push host
-        uses: docker/build-push-action@v5
-        with:
-          push: true
-          tags: faulo/jenkins-host:latest
-          file: Dockerfile-Host
-      -
-        name: Build and push singleton Jenkins
-        uses: docker/build-push-action@v5
-        with:
-          push: true
-          tags: faulo/jenkins:latest
-          file: Dockerfile
+          tags: faulo/basic-agent:latest
+          file: basic-agent/Dockerfile
