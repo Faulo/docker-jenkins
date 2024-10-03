@@ -28,3 +28,10 @@ jobs:
           push: true
           tags: faulo/basic-agent:latest
           context: "{{defaultContext}}:basic-agent"
+      -
+        name: Build "ci-agent"
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: faulo/ci-agent:latest
+          context: "{{defaultContext}}:ci-agent"

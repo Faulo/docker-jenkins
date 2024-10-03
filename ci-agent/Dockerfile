@@ -36,9 +36,11 @@ RUN apt install -y \
 # Farah
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 COPY unity/composer.json /var/unity/
+COPY unity/config /var/unity/config/
 COPY unity/compose-unity /usr/local/bin/
 RUN chmod +x /usr/local/bin/compose-unity
 RUN chmod -R 777 /var/unity
 ENV COMPOSE_UNITY="composer -d /var/unity"
 ENV COMPOSER_ALLOW_SUPERUSER="1"
 RUN compose-unity update --no-dev
+RUN compose-unity exec unity-build
