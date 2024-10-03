@@ -19,7 +19,7 @@ RUN dpkg --add-architecture i386
 RUN apt update
 RUN apt install -y lib32gcc-s1
 COPY steamcmd /usr/local/bin/
-RUN chmod +x /usr/local/bin/steamcmd
+RUN chmod +x /usr/local/bin/steamcmd /usr/local/bin/linux32/steamcmd
 RUN steamcmd --help
 
 # PHP
