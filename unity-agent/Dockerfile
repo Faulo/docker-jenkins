@@ -50,3 +50,5 @@ RUN apt install -y \
 	xfonts-base
 ENV USER="root"
 ENV RESOLUTION="1920x1080"
+
+RUN compose-unity exec unity-help

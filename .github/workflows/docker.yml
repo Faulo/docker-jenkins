@@ -35,3 +35,10 @@ jobs:
           push: true
           tags: faulo/ci-agent:latest
           context: "{{defaultContext}}:ci-agent"
+      -
+        name: Build "unity-agent"
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: faulo/unity-agent:latest
+          context: "{{defaultContext}}:unity-agent"
