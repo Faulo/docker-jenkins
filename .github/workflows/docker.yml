@@ -27,4 +27,4 @@ jobs:
         with:
           push: true
           tags: faulo/basic-agent:latest
-          context: basic-agent
+          context: "{{defaultContext}}:basic-agent"
