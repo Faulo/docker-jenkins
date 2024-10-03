@@ -10,11 +10,13 @@ This agent contains:
 
 ## ci-agent
 This agent contains everything above as well as:
-- A Steam client (steamcmd).
+- A Node.js client (npm).
 - An Itch.io client (butler).
+- A Steam client (steamcmd).
 - An installation of [slothsoft/unity](https://github.com/Faulo/slothsoft-unity) (compose-unity).
 
 ## unity-agent
 This agent contains everything above as well as:
-- A Unity Hub installation.
 - A .NET installation.
+- A Unity Hub installation.
+- A VNC server to set up Unity licensing.
