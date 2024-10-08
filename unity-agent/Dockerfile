@@ -53,5 +53,5 @@ RUN apt install -y \
 ENV USER="root"
 ENV RESOLUTION="1920x1080"
 
-# Test Unity
+# Test
 RUN compose-unity exec unity-help

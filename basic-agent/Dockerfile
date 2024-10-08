@@ -1,4 +1,4 @@
-FROM openjdk:21-bookworm
+FROM debian:slim
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -15,6 +15,7 @@ RUN apt install -y \
     ca-certificates \
     software-properties-common \
     curl
+RUN apt upgrade -y
 
 # Git
 RUN apt install -y \
@@ -27,14 +28,14 @@ RUN wget https://www.plasticscm.com/plasticrepo/stable/ubuntu/Release.key -O - |
 RUN apt update
 RUN apt install -y plasticscm-client-core
 
-# Linux Tools
-RUN apt upgrade -y
-
 # Jenkins
 WORKDIR /var
 COPY jenkins-agent /usr/local/bin/jenkins-agent
 RUN chmod +x /usr/local/bin/jenkins-agent
 ENTRYPOINT ["/usr/local/bin/jenkins-agent"]
 
-# Test Java
+# Java
+RUN apt install -y openjdk-17-jre
+
+# Test
 RUN java --version

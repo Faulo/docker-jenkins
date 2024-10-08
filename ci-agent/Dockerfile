@@ -48,5 +48,5 @@ ENV COMPOSE_UNITY="composer -d /var/unity"
 ENV COMPOSER_ALLOW_SUPERUSER="1"
 RUN compose-unity update --no-dev
 
-# Test Farah
+# Test
 RUN compose-unity exec unity-build
