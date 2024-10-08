@@ -1,5 +1,7 @@
 FROM openjdk:21-bookworm
 
+ARG DEBIAN_FRONTEND=noninteractive
+
 USER root
 
 # Linux Tools
@@ -33,3 +35,6 @@ WORKDIR /var
 COPY jenkins-agent /usr/local/bin/jenkins-agent
 RUN chmod +x /usr/local/bin/jenkins-agent
 ENTRYPOINT ["/usr/local/bin/jenkins-agent"]
+
+# Test Java
+RUN java --version

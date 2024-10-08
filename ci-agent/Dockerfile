@@ -1,5 +1,7 @@
 FROM faulo/basic-agent:latest
 
+ARG DEBIAN_FRONTEND=noninteractive
+
 COPY machine-id /etc/machine-id
 
 # NodeJS
@@ -45,4 +47,6 @@ RUN chmod -R 777 /var/unity
 ENV COMPOSE_UNITY="composer -d /var/unity"
 ENV COMPOSER_ALLOW_SUPERUSER="1"
 RUN compose-unity update --no-dev
+
+# Test Farah
 RUN compose-unity exec unity-build

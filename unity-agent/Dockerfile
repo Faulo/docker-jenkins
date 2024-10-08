@@ -1,5 +1,7 @@
 FROM faulo/ci-agent:latest
 
+ARG DEBIAN_FRONTEND=noninteractive
+
 # .NET SDK
 RUN wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
 RUN dpkg -i packages-microsoft-prod.deb
@@ -51,4 +53,5 @@ RUN apt install -y \
 ENV USER="root"
 ENV RESOLUTION="1920x1080"
 
+# Test Unity
 RUN compose-unity exec unity-help
