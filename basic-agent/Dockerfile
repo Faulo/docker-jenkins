@@ -17,6 +17,12 @@ RUN apt install -y \
     curl
 RUN apt upgrade -y
 
+# UTF-8
+ENV LANG=C.UTF-8
+RUN apt install -y locales && \
+    echo "$LANG UTF-8" > /etc/locale.gen && \
+    locale-gen $LANG
+
 # Git
 RUN apt install -y \
     git \
@@ -35,7 +41,8 @@ RUN chmod +x /usr/local/bin/jenkins-agent
 ENTRYPOINT ["/usr/local/bin/jenkins-agent"]
 
 # Java
-RUN apt install -y openjdk-17-jre
+ENV JAVA_VERSION=17
+RUN apt install -y openjdk-$JAVA_VERSION-jre
 
 # Test
 RUN java --version
