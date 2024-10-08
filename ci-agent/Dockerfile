@@ -26,16 +26,16 @@ RUN steamcmd --help
 
 # PHP
 RUN apt install -y \
-	php \
-	php-xsl \
-	php-fileinfo \
-	php-sockets \
-	php-exif \
-	php-intl \
-	php-dom \
-	php-zip \
-	php-curl \
-	php-mbstring
+    php \
+    php-xsl \
+    php-fileinfo \
+    php-sockets \
+    php-exif \
+    php-intl \
+    php-dom \
+    php-zip \
+    php-curl \
+    php-mbstring
 
 # Farah
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer

@@ -7,19 +7,19 @@ USER root
 # Linux Tools
 RUN apt update
 RUN apt install -y \
-	apt-transport-https \
-	wget \
-	zip \
-	nano \
-	gnupg2 \
-	ca-certificates \
-	software-properties-common \
-	curl
+    apt-transport-https \
+    wget \
+    zip \
+    nano \
+    gnupg2 \
+    ca-certificates \
+    software-properties-common \
+    curl
 
 # Git
 RUN apt install -y \
-	git \
-	git-lfs
+    git \
+    git-lfs
 
 # Plastic
 RUN echo "deb https://www.plasticscm.com/plasticrepo/stable/ubuntu/ ./" > /etc/apt/sources.list.d/plasticscm-stable.list

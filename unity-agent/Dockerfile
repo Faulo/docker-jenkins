@@ -19,22 +19,22 @@ RUN echo "deb https://hub.unity3d.com/linux/repos/deb stable main" > /etc/apt/so
 RUN wget https://hub.unity3d.com/linux/keys/public -O - | apt-key add -
 RUN apt update
 RUN apt install -y \
-	libgbm-dev \
-	libasound2 \
-	libgconf-2-4 \
-	libtinfo5 \
-	libc6-dev \
-	libncurses5 \
-	libglu1 \
-	xvfb \
-	cpio \
-	p7zip-full \
-	blender \
-	ffmpeg \
-	python3 \
-	apparmor \
-	xz-utils \
-	unityhub
+    libgbm-dev \
+    libasound2 \
+    libgconf-2-4 \
+    libtinfo5 \
+    libc6-dev \
+    libncurses5 \
+    libglu1 \
+    xvfb \
+    cpio \
+    p7zip-full \
+    blender \
+    ffmpeg \
+    python3 \
+    apparmor \
+    xz-utils \
+    unityhub
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1"
 ENV JAVA_OPTS="-Dhudson.model.DirectoryBrowserSupport.CSP=\"\""
 
@@ -45,11 +45,11 @@ RUN rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb
 
 # VNC Server
 RUN apt install -y \
-	xfce4 \
-	xfce4-goodies \
-	tightvncserver \
-	dbus-x11 \
-	xfonts-base
+    xfce4 \
+    xfce4-goodies \
+    tightvncserver \
+    dbus-x11 \
+    xfonts-base
 ENV USER="root"
 ENV RESOLUTION="1920x1080"
 
