@@ -17,11 +17,14 @@ RUN curl -L https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default -o 
     butler --help
 
 # Steam SDK
-COPY --chmod=755 steamcmd /usr/local/bin/
 RUN dpkg --add-architecture i386 && \
     apt update && \
     apt install -y lib32gcc-s1 && \
-    steamcmd --help
+    ln -s /usr/local/bin/steamcmd.sh /usr/local/bin/steamcmd && \
+    curl -sL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" -o steamcmd.tar.gz && \
+    tar -xzf steamcmd.tar.gz -C /usr/local/bin && \
+    rm steamcmd.tar.gz && \
+    steamcmd +quit
 
 # PHP
 RUN apt install -y \
