@@ -5,24 +5,23 @@ ARG DEBIAN_FRONTEND=noninteractive
 COPY machine-id /etc/machine-id
 
 # NodeJS
-RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
-RUN apt install -y nodejs
+RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt install -y nodejs
 
 # itch.io
-RUN curl -L https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default -o butler.zip
-RUN unzip butler.zip
-RUN chmod +x butler
-RUN mv butler /usr/local/bin
-RUN rm butler.zip
-RUN butler --help
+RUN curl -L https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default -o butler.zip && \
+    unzip butler.zip && \
+    chmod +x butler && \
+    mv butler /usr/local/bin && \
+    rm butler.zip && \
+    butler --help
 
 # Steam SDK
-RUN dpkg --add-architecture i386
-RUN apt update
-RUN apt install -y lib32gcc-s1
-COPY steamcmd /usr/local/bin/
-RUN chmod +x /usr/local/bin/steamcmd /usr/local/bin/linux32/steamcmd
-RUN steamcmd --help
+COPY --chmod=755 steamcmd /usr/local/bin/
+RUN dpkg --add-architecture i386 && \
+    apt update && \
+    apt install -y lib32gcc-s1 && \
+    steamcmd --help
 
 # PHP
 RUN apt install -y \
@@ -38,14 +37,12 @@ RUN apt install -y \
     php-mbstring
 
 # Farah
-COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
-COPY unity/composer.json /var/unity/
-COPY unity/config /var/unity/config/
-COPY unity/compose-unity /usr/local/bin/
-RUN chmod +x /usr/local/bin/compose-unity
-RUN chmod -R 777 /var/unity
 ENV COMPOSE_UNITY="composer -d /var/unity"
 ENV COMPOSER_ALLOW_SUPERUSER="1"
+COPY --chmod=755 --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+COPY --chmod=755 unity/composer.json /var/unity/
+COPY --chmod=755 unity/config /var/unity/config/
+COPY --chmod=755 unity/compose-unity /usr/local/bin/
 RUN compose-unity update --no-dev
 
 # Test

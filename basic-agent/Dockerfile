@@ -5,8 +5,9 @@ ARG DEBIAN_FRONTEND=noninteractive
 USER root
 
 # Linux Tools
-RUN apt update
-RUN apt install -y \
+RUN apt update && \
+    apt upgrade -y && \
+    apt install -y \
     apt-transport-https \
     wget \
     zip \
@@ -14,8 +15,8 @@ RUN apt install -y \
     gnupg2 \
     ca-certificates \
     software-properties-common \
-    curl
-RUN apt upgrade -y
+    curl \
+    pciutils
 
 # UTF-8
 ENV LANG=C.UTF-8
@@ -29,19 +30,19 @@ RUN apt install -y \
     git-lfs
 
 # Plastic
-RUN echo "deb https://www.plasticscm.com/plasticrepo/stable/ubuntu/ ./" > /etc/apt/sources.list.d/plasticscm-stable.list
-RUN wget https://www.plasticscm.com/plasticrepo/stable/ubuntu/Release.key -O - | apt-key add -
-RUN apt update
-RUN apt install -y plasticscm-client-core
+RUN echo "deb https://www.plasticscm.com/plasticrepo/stable/ubuntu/ ./" > /etc/apt/sources.list.d/plasticscm-stable.list && \
+    wget https://www.plasticscm.com/plasticrepo/stable/ubuntu/Release.key -O - | apt-key add - && \
+    apt update && \
+    apt install -y plasticscm-client-core
 
 # Jenkins
 WORKDIR /var
-COPY jenkins-agent /usr/local/bin/jenkins-agent
-RUN chmod +x /usr/local/bin/jenkins-agent
-ENTRYPOINT ["/usr/local/bin/jenkins-agent"]
+COPY --chmod=755 jenkins-agent.sh /usr/local/bin/jenkins-agent.sh
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/jenkins-agent.sh"]
 
 # Java
 ENV JAVA_VERSION=17
+ENV JAVA_OPTS="-Dhudson.model.DirectoryBrowserSupport.CSP=\"\""
 RUN apt install -y openjdk-$JAVA_VERSION-jre
 
 # Test
