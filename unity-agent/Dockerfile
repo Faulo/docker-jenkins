@@ -13,9 +13,8 @@ RUN wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod
 
 # DocFX
 ENV FrameworkPathOverride="/usr/lib/mono/4.7.1-api/"
-RUN dotnet tool update -g docfx && \
-    apt install -y mono-devel && \
-    docfx --help
+RUN apt install -y mono-devel && \
+	dotnet tool update -g docfx
 
 # Unity
 RUN echo "deb https://hub.unity3d.com/linux/repos/deb stable main" > /etc/apt/sources.list.d/unityhub.list && \

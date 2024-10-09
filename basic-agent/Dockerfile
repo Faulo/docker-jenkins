@@ -16,6 +16,7 @@ RUN apt update && \
     ca-certificates \
     software-properties-common \
     curl \
+	tini \
     pciutils
 
 # UTF-8
