@@ -53,7 +53,6 @@ RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /
 ENV JENKINS_URL=http://jenkins:8080/
 ENV JENKINS_SECRET=InsertSecretHere
 ENV JENKINS_AGENT_NAME=InsertAgentNameHere
-ENV JENKINS_AGENT_WORKDIR=/var/workspace
 ENV JENKINS_JAVA_OPTS=-Dorg.jenkinsci.plugins.gitclient.Git.timeOut=60
 WORKDIR /var
 COPY --chmod=755 jenkins-agent.sh /usr/local/bin/jenkins-agent.sh

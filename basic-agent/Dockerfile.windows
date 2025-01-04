@@ -27,11 +27,10 @@ RUN choco install -y --no-progress \
 ENV JENKINS_URL=http://jenkins:8080/
 ENV JENKINS_SECRET=InsertSecretHere
 ENV JENKINS_AGENT_NAME=InsertAgentNameHere
-ENV JENKINS_AGENT_WORKDIR=C:\\workspace
 ENV JENKINS_JAVA_OPTS=-Dorg.jenkinsci.plugins.gitclient.Git.timeOut=60
-WORKDIR C:\\tools
+WORKDIR C:\\jenkins
 COPY jenkins-agent.bat .
-ENTRYPOINT ["cmd", "/c", "C:\\tools\\jenkins-agent.bat"]
+ENTRYPOINT ["cmd", "/c", "C:\\jenkins\\jenkins-agent.bat"]
 
 # Java
 ENV JAVA_VERSION=17
