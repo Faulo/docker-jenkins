@@ -1,0 +1,34 @@
+FROM faulo/basic-agent:latest-windows
+
+# NodeJS
+RUN choco install -y --no-progress \
+    nodejs
+RUN npm --version
+
+# itch.io
+RUN choco install -y --no-progress \
+    butler
+RUN butler --version
+
+# Steam SDK
+RUN choco install -y --no-progress \
+    steamcmd
+RUN steamcmd +quit; exit 0
+
+# PHP
+RUN choco install -y --no-progress \
+    php --version=8.3.15
+COPY php.ini C:\\tools\\php83\\custom.ini
+RUN Get-Content C:\\tools\\php83\\custom.ini | Add-Content -Path C:\\tools\\php83\\php.ini
+
+RUN php --modules
+RUN choco install -y --no-progress \
+    composer
+RUN composer --version
+
+# Farah
+ENV COMPOSE_UNITY="composer -d C:\\unity"
+ENV COMPOSER_ALLOW_SUPERUSER="1"
+COPY unity/composer.json C:\\unity\\
+COPY unity/compose-unity.bat C:\\Windows\\
+RUN compose-unity update --no-dev

@@ -1,4 +1,4 @@
-FROM faulo/basic-agent:latest
+FROM faulo/basic-agent:latest-linux
 
 ARG DEBIAN_FRONTEND=noninteractive
 
