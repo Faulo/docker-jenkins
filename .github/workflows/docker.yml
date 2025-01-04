@@ -6,6 +6,34 @@ on:
       - 'main'
 
 jobs:
+  docker-windows:
+    runs-on: windows-2019
+    strategy:
+      fail-fast: true
+      max-parallel: 1
+      matrix:
+        image: ["basic-agent"]
+        os: ["windows"]
+    steps:
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      -
+        name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - 
+        name: Build farah:${{matrix.php}} for ${{matrix.os}}
+        working-directory: ${{matrix.image}}
+        run: docker build --isolation=hyperv . -f Dockerfile.${{matrix.os}} -t ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-${{matrix.os}}
+      - 
+        name: Push farah:${{matrix.php}} for ${{matrix.os}}
+        run: docker image push ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-${{matrix.os}}
   docker-linux:
     runs-on: ubuntu-latest
     strategy:
@@ -35,5 +63,5 @@ jobs:
           tags: ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-${{matrix.os}}
           platforms: ${{matrix.os}}/amd64
           context: "{{defaultContext}}:${{matrix.image}}"
-          file: Dockerfile
+          file: Dockerfile.${{matrix.os}}
           provenance: false

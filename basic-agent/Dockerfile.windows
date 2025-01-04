@@ -1,0 +1,37 @@
+FROM chocolatey/choco:latest-windows
+
+# Set PowerShell as default shell
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop';"]
+
+# Windows Tools
+RUN choco install -y --no-progress \
+    zip \
+    nano \
+    curl
+
+# Git
+RUN choco install -y --no-progress \
+    git
+
+# Plastic
+RUN choco install -y --no-progress \
+    plastic-scm
+
+# Docker
+ENV DOCKER_HOST=npipe:////./pipe/docker_engine
+RUN choco install -y --no-progress \
+    docker-cli
+
+# Jenkins
+WORKDIR C:/tools
+COPY jenkins-agent.bat .
+ENTRYPOINT ["cmd", "/c", "jenkins-agent.bat"]
+
+# Java
+ENV JAVA_VERSION=17
+ENV JAVA_OPTS="-Dhudson.model.DirectoryBrowserSupport.CSP=\"\""
+RUN choco install -y --no-progress \
+    openjdk${JAVA_VERSION}
+
+# Test
+RUN java --version
