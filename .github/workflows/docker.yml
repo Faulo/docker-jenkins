@@ -32,7 +32,7 @@ jobs:
         name: Push farah:${{matrix.php}} for ${{matrix.os}}
         run: docker image push ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-${{matrix.os}}
   docker-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: true
       max-parallel: 1
@@ -63,7 +63,7 @@ jobs:
           file: Dockerfile.${{matrix.os}}
           provenance: false
   merge:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
     - docker-windows
     - docker-linux
