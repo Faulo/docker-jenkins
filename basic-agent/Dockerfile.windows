@@ -8,7 +8,7 @@ RUN choco install -y --no-progress \
     zip \
     nano \
     curl
-RUN curl --version
+RUN curl.exe --version
 
 # Git
 RUN choco install -y --no-progress \
