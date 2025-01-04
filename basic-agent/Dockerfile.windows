@@ -22,7 +22,6 @@ RUN git --version
 ENV DOCKER_HOST=npipe:////./pipe/docker_engine
 RUN choco install -y --no-progress \
     docker-cli
-RUN docker version
 
 # Jenkins
 ENV JENKINS_URL=http://jenkins:8080/
@@ -32,11 +31,11 @@ ENV JENKINS_AGENT_WORKDIR=C:\\workspace
 ENV JENKINS_JAVA_OPTS=-Dorg.jenkinsci.plugins.gitclient.Git.timeOut=60
 WORKDIR C:\\tools
 COPY jenkins-agent.bat .
-ENTRYPOINT ["cmd", "/c", "jenkins-agent.bat"]
+ENTRYPOINT ["cmd", "/c", "C:\\tools\\jenkins-agent.bat"]
 
 # Java
 ENV JAVA_VERSION=17
 ENV JAVA_OPTS="-Dhudson.model.DirectoryBrowserSupport.CSP=\"\""
 RUN choco install -y --no-progress \
-    openjdk${JAVA_VERSION}
+    openjdk$env:JAVA_VERSION
 RUN java --version
