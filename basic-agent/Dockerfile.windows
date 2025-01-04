@@ -14,8 +14,7 @@ RUN choco install -y --no-progress \
     git
 
 # Plastic
-RUN choco install -y --no-progress \
-    plastic-scm
+# TODO
 
 # Docker
 ENV DOCKER_HOST=npipe:////./pipe/docker_engine
