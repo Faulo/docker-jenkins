@@ -62,3 +62,26 @@ jobs:
           context: "{{defaultContext}}:${{matrix.image}}"
           file: Dockerfile.${{matrix.os}}
           provenance: false
+  merge:
+    runs-on: ubuntu-latest
+    needs:
+    - docker-windows
+    - docker-linux
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["basic-agent"]
+    steps:
+      -
+        name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Merge manifests
+        uses: Noelware/docker-manifest-action@master
+        with:
+          inputs: ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest
+          images: ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-linux, ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-windows
+          push: true
