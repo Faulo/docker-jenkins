@@ -14,7 +14,6 @@ jobs:
       matrix:
         image: ["basic-agent", "ci-agent", "unity-agent"]
         os: ["linux"]
-        repository: ["faulo"]
     steps:
       -
         name: Set up QEMU
@@ -29,11 +28,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Build and push ${{matrix.repository}}/${{matrix.image}}:latest for ${{matrix.os}}
+        name: Build and push ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-${{matrix.os}}
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: ${{matrix.repository}}/${{matrix.image}}:latest-${{matrix.os}}
+          tags: ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-${{matrix.os}}
           platforms: ${{matrix.os}}/amd64
           context: "{{defaultContext}}:${{matrix.image}}"
           file: Dockerfile
