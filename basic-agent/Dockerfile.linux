@@ -48,7 +48,6 @@ RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /
     docker-ce-cli \
     docker-compose-plugin && \
     apt clean && rm -rf /var/lib/apt/lists/*
-RUN docker version
 
 # Jenkins
 ENV JENKINS_URL=http://jenkins:8080/
