@@ -17,24 +17,30 @@ RUN apt update && \
     software-properties-common \
     curl \
 	tini \
-    pciutils
+    pciutils && \
+    apt clean && rm -rf /var/lib/apt/lists/*
 
 # UTF-8
 ENV LANG=C.UTF-8
-RUN apt install -y locales && \
+RUN apt update && \
+    apt install -y locales && \
     echo "$LANG UTF-8" > /etc/locale.gen && \
-    locale-gen $LANG
+    locale-gen $LANG && \
+    apt clean && rm -rf /var/lib/apt/lists/*
 
 # Git
-RUN apt install -y \
+RUN apt update && \
+    apt install -y \
     git \
-    git-lfs
+    git-lfs && \
+    apt clean && rm -rf /var/lib/apt/lists/*
 
 # Plastic
 RUN echo "deb https://www.plasticscm.com/plasticrepo/stable/ubuntu/ ./" > /etc/apt/sources.list.d/plasticscm-stable.list && \
     wget https://www.plasticscm.com/plasticrepo/stable/ubuntu/Release.key -O - | apt-key add - && \
     apt update && \
-    apt install -y plasticscm-client-core
+    apt install -y plasticscm-client-core && \
+    apt clean && rm -rf /var/lib/apt/lists/*
 
 # Docker
 ENV DOCKER_HOST=unix:///var/run/docker.sock
@@ -53,7 +59,10 @@ ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/jenkins-agent.sh"]
 # Java
 ENV JAVA_VERSION=17
 ENV JAVA_OPTS="-Dhudson.model.DirectoryBrowserSupport.CSP=\"\""
-RUN apt install -y openjdk-$JAVA_VERSION-jre
+RUN apt update && \
+    apt install -y \
+    openjdk-$JAVA_VERSION-jre && \
+    apt clean && rm -rf /var/lib/apt/lists/*
 
 # Test
 RUN java --version
