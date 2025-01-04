@@ -1,7 +1,22 @@
-FROM chocolatey/choco:latest-windows
+FROM mcr.microsoft.com/windows/servercore:ltsc2019
 
-# Set PowerShell as default shell
-SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop';"]
+SHELL ["powershell", "-NoProfile", "-Command", "$ErrorActionPreference = 'Stop';"]
+
+# .NET Framework
+RUN Invoke-WebRequest -Uri https://go.microsoft.com/fwlink/?linkid=2088631 -OutFile C:\\ndp48-web-installer.exe; \
+    Start-Process -FilePath C:\\ndp48-web-installer.exe -ArgumentList '/quiet', '/norestart' -NoNewWindow -Wait; \
+    Remove-Item -Force C:\\ndp48-web-installer.exe; \
+    if (-not (Test-Path 'HKLM:\\SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full')) { \
+        Write-Error '.NET Framework 4.8 installation failed'; exit 1; \
+    }
+
+# Simulate reboot for .NET Framework 4.8
+RUN reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager" /v PendingFileRenameOperations /t REG_MULTI_SZ /d ""
+
+# Chocolatey
+RUN [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; \
+    iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')); \
+    setx PATH \"${env:PATH};$env:ALLUSERSPROFILE\\chocolatey\\bin\"
 
 # Windows Tools
 RUN choco install -y --no-progress \
