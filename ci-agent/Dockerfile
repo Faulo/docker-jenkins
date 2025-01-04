@@ -5,7 +5,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 COPY machine-id /etc/machine-id
 
 # NodeJS
-RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - && \
+RUN curl -sL https://deb.nodesource.com/setup_22.x | bash - && \
     apt install -y nodejs
 
 # itch.io
