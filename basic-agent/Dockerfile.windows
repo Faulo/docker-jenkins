@@ -16,7 +16,7 @@ RUN curl.exe --version
 # Git
 RUN choco install -y --no-progress \
     git
-RUN git --version
+RUN git config --global --add safe.directory *
 
 # Plastic
 # TODO
