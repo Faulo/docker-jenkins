@@ -1,0 +1,12 @@
+FROM faulo/ci-agent:latest-windows
+
+# .NET SDK
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1"
+RUN choco install -y --no-progress \
+    dotnet-sdk --version=8.0.404
+RUN dotnet --version
+
+# Unity
+RUN choco install -y --no-progress \
+    unity-hub
+
