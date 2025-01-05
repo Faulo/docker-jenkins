@@ -9,4 +9,4 @@ RUN dotnet --version
 # Unity
 RUN choco install -y --no-progress \
     unity-hub
-
+RUN compose-unity exec unity-help
