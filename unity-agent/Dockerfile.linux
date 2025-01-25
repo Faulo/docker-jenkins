@@ -16,6 +16,17 @@ ENV FrameworkPathOverride="/usr/lib/mono/4.7.1-api/"
 RUN apt install -y mono-devel && \
 	dotnet tool update -g docfx
 
+# Blender
+RUN apt update && apt install -y wget tar libglu1-mesa libxi6 libxrender1 libxrandr2 libxcursor1 libxinerama1 libxxf86vm1 && \
+    apt clean && rm -rf /var/lib/apt/lists/*
+RUN LATEST_VERSION=$(wget -qO- https://www.blender.org/download/ | grep -oP 'Blender \K[0-9]+\.[0-9]+\.[0-9]+' | head -1) && \
+    BLENDER_URL="https://download.blender.org/release/Blender${LATEST_VERSION%.*}/blender-${LATEST_VERSION}-linux-x64.tar.xz" && \
+    wget -q ${BLENDER_URL} -O /tmp/blender.tar.xz && \
+    tar -xf /tmp/blender.tar.xz -C /opt/ && \
+    rm /tmp/blender.tar.xz && \
+    ln -s /opt/blender-${LATEST_VERSION}/blender /usr/local/bin/blender
+RUN blender --version
+
 # Unity
 RUN echo "deb https://hub.unity3d.com/linux/repos/deb stable main" > /etc/apt/sources.list.d/unityhub.list && \
     wget https://hub.unity3d.com/linux/keys/public -O - | apt-key add - && \
@@ -31,7 +42,6 @@ RUN echo "deb https://hub.unity3d.com/linux/repos/deb stable main" > /etc/apt/so
     xvfb \
     cpio \
     p7zip-full \
-    blender \
     ffmpeg \
     python3 \
     apparmor \
