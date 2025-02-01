@@ -10,3 +10,5 @@ RUN dotnet --version
 RUN choco install -y --no-progress \
     unity-hub
 
+# GPU support
+COPY system32/* C:\\Windows\\System32\\
