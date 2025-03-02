@@ -4,6 +4,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 # .NET SDK
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1"
+ENV DOTNET_CLI_UI_LANGUAGE="en"
 RUN wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \
     rm packages-microsoft-prod.deb && \
