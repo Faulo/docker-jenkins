@@ -85,3 +85,4 @@ jobs:
           inputs: ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest
           tags: ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-linux, ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-windows
           push: true
+          fallback: true
