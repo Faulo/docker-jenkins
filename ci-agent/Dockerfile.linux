@@ -37,7 +37,8 @@ RUN apt install -y \
     php-dom \
     php-zip \
     php-curl \
-    php-mbstring
+    php-mbstring \
+    php-imap
 
 # Farah
 ENV COMPOSE_UNITY="composer -d /var/unity"

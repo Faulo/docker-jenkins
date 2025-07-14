@@ -83,5 +83,6 @@ jobs:
         uses: Noelware/docker-manifest-action@master
         with:
           inputs: ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest
-          images: ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-linux, ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-windows
+          tags: ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-linux, ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-windows
           push: true
+          fallback: true
