@@ -64,7 +64,7 @@ RUN echo "deb https://hub.unity3d.com/linux/repos/deb stable main" > /etc/apt/so
     python3 \
     apparmor \
     xz-utils \
-    unityhub=3.5.2
+    unityhub=3.12.1
 
 # Unity 2021 openssl compatibility
 RUN wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
