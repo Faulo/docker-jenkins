@@ -1,88 +1,80 @@
 name: Docker
 
 on:
-  push:
-    branches:
-      - 'main'
+    push:
+        branches:
+            - "main"
+    schedule:
+        - cron: "0 0 1 * *"
 
 jobs:
-  docker-windows:
-    runs-on: windows-2022
-    strategy:
-      fail-fast: true
-      max-parallel: 1
-      matrix:
-        image: ["basic-agent", "ci-agent", "unity-agent"]
-        os: ["windows"]
-    steps:
-      - 
-        name: Checkout
-        uses: actions/checkout@v4
-      -
-        name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - 
-        name: Build ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-${{matrix.os}}
-        working-directory: ${{matrix.image}}
-        run: docker build --isolation=hyperv . -f Dockerfile.${{matrix.os}} -t ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-${{matrix.os}}
-      - 
-        name: Push ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-${{matrix.os}}
-        run: docker image push ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-${{matrix.os}}
-  docker-linux:
-    runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: true
-      max-parallel: 1
-      matrix:
-        image: ["basic-agent", "ci-agent", "unity-agent"]
-        os: ["linux"]
-    steps:
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      -
-        name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build and push ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-${{matrix.os}}
-        uses: docker/build-push-action@v5
-        with:
-          push: true
-          tags: ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-${{matrix.os}}
-          platforms: ${{matrix.os}}/amd64
-          context: "{{defaultContext}}:${{matrix.image}}"
-          file: Dockerfile.${{matrix.os}}
-          provenance: false
-  merge:
-    runs-on: ubuntu-24.04
-    needs:
-    - docker-windows
-    - docker-linux
-    strategy:
-      fail-fast: false
-      matrix:
-        image: ["basic-agent", "ci-agent", "unity-agent"]
-    steps:
-      -
-        name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Merge manifests
-        uses: Noelware/docker-manifest-action@master
-        with:
-          inputs: ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest
-          tags: ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-linux, ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-windows
-          push: true
-          fallback: true
+    docker-windows:
+        runs-on: windows-2022
+        strategy:
+            fail-fast: true
+            max-parallel: 1
+            matrix:
+                image: ["basic-agent", "ci-agent", "unity-agent"]
+                os: ["windows"]
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+            - name: Login to Docker Hub
+              uses: docker/login-action@v4
+              with:
+                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  password: ${{ secrets.DOCKERHUB_TOKEN }}
+            - name: Build ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-${{matrix.os}}
+              working-directory: ${{matrix.image}}
+              run: docker build --isolation=hyperv . -f Dockerfile.${{matrix.os}} -t ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-${{matrix.os}}
+            - name: Push ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-${{matrix.os}}
+              run: docker image push ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-${{matrix.os}}
+    docker-linux:
+        runs-on: ubuntu-24.04
+        strategy:
+            fail-fast: true
+            max-parallel: 1
+            matrix:
+                image: ["basic-agent", "ci-agent", "unity-agent"]
+                os: ["linux"]
+        steps:
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v4
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v4
+            - name: Login to Docker Hub
+              uses: docker/login-action@v4
+              with:
+                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  password: ${{ secrets.DOCKERHUB_TOKEN }}
+            - name: Build and push ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-${{matrix.os}}
+              uses: docker/build-push-action@v7
+              with:
+                  push: true
+                  tags: ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-${{matrix.os}}
+                  platforms: ${{matrix.os}}/amd64
+                  context: "{{defaultContext}}:${{matrix.image}}"
+                  file: Dockerfile.${{matrix.os}}
+                  provenance: false
+    merge:
+        runs-on: ubuntu-24.04
+        needs:
+            - docker-windows
+            - docker-linux
+        strategy:
+            fail-fast: false
+            matrix:
+                image: ["basic-agent", "ci-agent", "unity-agent"]
+        steps:
+            - name: Login to Docker Hub
+              uses: docker/login-action@v4
+              with:
+                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  password: ${{ secrets.DOCKERHUB_TOKEN }}
+            - name: Merge manifests
+              uses: Noelware/docker-manifest-action@v1
+              with:
+                  inputs: ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest
+                  tags: ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-linux, ${{secrets.DOCKERHUB_USERNAME}}/${{matrix.image}}:latest-windows
+                  push: true
+                  fallback: true
