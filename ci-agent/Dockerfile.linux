@@ -5,11 +5,11 @@ ARG DEBIAN_FRONTEND=noninteractive
 COPY machine-id /etc/machine-id
 
 # NodeJS
-RUN curl -sL https://deb.nodesource.com/setup_22.x | bash - && \
+RUN curl -sL "https://deb.nodesource.com/setup_22.x" | bash - && \
     apt install -y nodejs
 
 # itch.io
-RUN curl -L https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default -o butler.zip && \
+RUN curl -sL "https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default" -o butler.zip && \
     unzip butler.zip && \
     chmod +x butler && \
     mv butler /usr/local/bin && \

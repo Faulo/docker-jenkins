@@ -17,6 +17,29 @@ jobs:
                 image: ["basic-agent", "ci-agent", "unity-agent"]
                 os: ["windows"]
         steps:
+            - name: Ensure Docker is running
+              shell: pwsh
+              run: |
+                  $service = Get-Service docker -ErrorAction Stop
+                  if ($service.Status -ne 'Running') {
+                    Start-Service docker
+                  }
+
+                  $ready = $false
+                  1..24 | ForEach-Object {
+                    try {
+                      docker version
+                      $ready = $true
+                      return
+                    } catch {
+                      Start-Sleep -Seconds 5
+                    }
+                  }
+
+                  if (-not $ready) {
+                    Get-Service docker
+                    throw "Docker daemon not ready"
+                  }
             - name: Checkout
               uses: actions/checkout@v6
             - name: Login to Docker Hub
