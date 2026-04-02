@@ -12,8 +12,8 @@ RUN curl -fsSL https://packages.microsoft.com/config/debian/12/packages-microsof
     apt-get update && \
     apt-get install -y --no-install-recommends dotnet-sdk-8.0 && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-RUN dotnet --version
+    rm -rf /var/lib/apt/lists/* && \
+    dotnet --version
 
 # DocFX
 ENV FrameworkPathOverride="/usr/lib/mono/4.7.1-api/"
@@ -25,44 +25,10 @@ RUN apt-get update && \
 
 # Blender
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        libxkbcommon-x11-0 \
-        jq \
-        tar \
-        xz-utils \
-        libglu1-mesa 
-        libxi6 \
-        libxrender1 \
-        libxrandr2 \
-        libxcursor1 \
-        libxinerama1 \
-        libxxf86vm1 && \
+    apt-get install -y --no-install-recommends blender && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
-    mkdir /blender && \
-  if [ -z ${BLENDER_VERSION+x} ]; then \
-    BLENDER_VERSION=$(curl -s https://projects.blender.org/api/v1/repos/blender/blender/tags \
-      | jq -r '.[] | select(.name | contains("-rc") | not) | .name' \
-      | sed 's|^v||g' | sort -rV | head -1); \
-  fi && \
-  BLENDER_FOLDER=$(echo "Blender${BLENDER_VERSION}" | sed -r 's|(Blender[0-9]*\.[0-9]*)\.[0-9]*|\1|') && \
-  curl -o \
-    /tmp/blender.tar.xz -fL \
-    "https://mirror.clarkson.edu/blender/release/${BLENDER_FOLDER}/blender-${BLENDER_VERSION}-linux-x64.tar.xz" || \
-    curl -o \
-      /tmp/blender.tar.xz -fL \
-      "https://mirrors.iu13.net/blender/release/${BLENDER_FOLDER}/blender-${BLENDER_VERSION}-linux-x64.tar.xz" && \
-  tar xf \
-    /tmp/blender.tar.xz -C \
-    /blender/ --strip-components=1 && \
-  ln -s \
-    /blender/blender \
-    /usr/bin/blender && \
-  rm -rf \
-    /tmp/* \
-    /var/lib/apt/lists/* \
-    /var/tmp/*
-RUN blender --version
+    blender --version
 
 # Unity Hub
 RUN install -m 0755 -d /etc/apt/keyrings && \
