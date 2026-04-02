@@ -27,6 +27,7 @@ RUN dpkg --add-architecture i386 && \
     steamcmd +quit
 
 # PHP
+ENV PHP_VERSION=8.2
 RUN apt install -y \
     php \
     php-xsl \

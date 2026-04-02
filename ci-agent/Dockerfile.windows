@@ -16,6 +16,7 @@ RUN choco install -y --no-progress \
 RUN steamcmd +quit; exit 0
 
 # PHP
+ENV PHP_VERSION=8.2
 RUN choco install -y --no-progress \
     php --version=8.2.30
 COPY php.ini C:\\tools\\php83\\custom.ini
