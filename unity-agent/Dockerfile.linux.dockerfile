@@ -24,36 +24,31 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Blender
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        jq \
-        libglu1-mesa \
-        libgconf-2-4 \
-        libxinerama1 \
-        libxi6 \
-        libxkbcommon-x11-0 \
-        libxrandr2 \
-        libxrender1 \
-        libxcursor1 \
-        libxxf86vm1 \
-        tar \
-        wget \
-        xz-utils && \
-    mkdir -p /blender && \
-    if [ -z "${BLENDER_VERSION+x}" ]; then \
-        BLENDER_VERSION="$(curl -fsSL https://projects.blender.org/api/v1/repos/blender/blender/tags \
-          | jq -r '.[] | select(.name | contains("-rc") | not) | .name' \
-          | sed 's|^v||g' | sort -rV | head -1)"; \
-    fi && \
-    BLENDER_FOLDER="$(echo "Blender${BLENDER_VERSION}" | sed -r 's|(Blender[0-9]*\.[0-9]*)\.[0-9]*|\1|')" && \
-    curl -fsSL "https://mirror.clarkson.edu/blender/release/${BLENDER_FOLDER}/blender-${BLENDER_VERSION}-linux-x64.tar.xz" -o /tmp/blender.tar.xz || \
-    curl -fsSL "https://mirrors.iu13.net/blender/release/${BLENDER_FOLDER}/blender-${BLENDER_VERSION}-linux-x64.tar.xz" -o /tmp/blender.tar.xz && \
-    tar -xJf /tmp/blender.tar.xz -C /blender --strip-components=1 && \
-    ln -sf /blender/blender /usr/local/bin/blender && \
-    blender --version && \
-    rm -f /tmp/blender.tar.xz && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt update && apt install -y libxkbcommon-x11-0 jq wget tar xz-utils libglu1-mesa libxi6 libxrender1 libxrandr2 libxcursor1 libxinerama1 libxxf86vm1 && \
+    apt clean && rm -rf /var/lib/apt/lists/* && \
+    mkdir /blender && \
+  if [ -z ${BLENDER_VERSION+x} ]; then \
+    BLENDER_VERSION=$(curl -s https://projects.blender.org/api/v1/repos/blender/blender/tags \
+      | jq -r '.[] | select(.name | contains("-rc") | not) | .name' \
+      | sed 's|^v||g' | sort -rV | head -1); \
+  fi && \
+  BLENDER_FOLDER=$(echo "Blender${BLENDER_VERSION}" | sed -r 's|(Blender[0-9]*\.[0-9]*)\.[0-9]*|\1|') && \
+  curl -o \
+    /tmp/blender.tar.xz -fL \
+    "https://mirror.clarkson.edu/blender/release/${BLENDER_FOLDER}/blender-${BLENDER_VERSION}-linux-x64.tar.xz" || \
+    curl -o \
+      /tmp/blender.tar.xz -fL \
+      "https://mirrors.iu13.net/blender/release/${BLENDER_FOLDER}/blender-${BLENDER_VERSION}-linux-x64.tar.xz" && \
+  tar xf \
+    /tmp/blender.tar.xz -C \
+    /blender/ --strip-components=1 && \
+  ln -s \
+    /blender/blender \
+    /usr/bin/blender && \
+  rm -rf \
+    /tmp/* \
+    /var/lib/apt/lists/* \
+    /var/tmp/*
 RUN blender --version
 
 # Unity Hub
