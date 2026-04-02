@@ -11,21 +11,32 @@ RUN curl -fsSL https://packages.microsoft.com/config/debian/12/packages-microsof
     rm /tmp/packages-microsoft-prod.deb && \
     apt-get update && \
     apt-get install -y --no-install-recommends dotnet-sdk-8.0 && \
-    dotnet --version && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+RUN dotnet --version
 
 # DocFX
 ENV FrameworkPathOverride="/usr/lib/mono/4.7.1-api/"
 RUN apt-get update && \
     apt-get install -y --no-install-recommends mono-devel && \
-    dotnet tool update -g docfx && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    dotnet tool update -g docfx
 
 # Blender
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libxkbcommon-x11-0 jq wget tar xz-utils libglu1-mesa libxi6 libxrender1 libxrandr2 libxcursor1 libxinerama1 libxxf86vm1 && \
+    apt-get install -y --no-install-recommends \
+        libxkbcommon-x11-0 \
+        jq \
+        tar \
+        xz-utils \
+        libglu1-mesa 
+        libxi6 \
+        libxrender1 \
+        libxrandr2 \
+        libxcursor1 \
+        libxinerama1 \
+        libxxf86vm1 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     mkdir /blender && \
