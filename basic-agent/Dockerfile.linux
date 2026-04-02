@@ -4,50 +4,70 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 USER root
 
-# Linux Tools
-RUN apt update  && apt install -y \
-    apt-transport-https \
+# Base tools + locale
+ENV LANG=C.UTF-8
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    git \
+    git-lfs \
+    gnupg \
+    locales \
+    nano \
+    pciutils \
+    tini \
     wget \
     zip \
-    nano \
-    gnupg2 \
-    ca-certificates \
-    software-properties-common \
-    curl \
-	tini \
-    pciutils \
-    locales && \
-    apt clean && rm -rf /var/lib/apt/lists/*
-RUN curl --version
-
-# UTF-8
-ENV LANG=C.UTF-8
-RUN echo "$LANG UTF-8" > /etc/locale.gen && \
-    locale-gen $LANG
-
-# Git
-RUN apt update && apt install -y \
-    git \
-    git-lfs && \
-    apt clean && rm -rf /var/lib/apt/lists/*
-RUN git --version
+    unzip && \
+    echo "$LANG UTF-8" > /etc/locale.gen && \
+    locale-gen "$LANG" && \
+    install -m 0755 -d /etc/apt/keyrings && \
+    curl --version && \
+    git --version && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Plastic
-RUN echo "deb https://www.plasticscm.com/plasticrepo/stable/ubuntu/ ./" > /etc/apt/sources.list.d/plasticscm-stable.list && \
-    wget https://www.plasticscm.com/plasticrepo/stable/ubuntu/Release.key -O - | apt-key add - && \
-    apt update && apt install -y \
-    plasticscm-client-core && \
-    apt clean && rm -rf /var/lib/apt/lists/*
-RUN cm version
-    
-# Docker
+RUN wget -qO- https://www.plasticscm.com/plasticrepo/stable/debian/Release.key | \
+        gpg --dearmor -o /etc/apt/keyrings/plasticscm-stable.gpg && \
+    chmod a+r /etc/apt/keyrings/plasticscm-stable.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/plasticscm-stable.gpg] https://www.plasticscm.com/plasticrepo/stable/debian ./" \
+        > /etc/apt/sources.list.d/plasticscm-stable.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        plasticscm-client-core && \
+    cm version && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Docker CLI
 ENV DOCKER_HOST=unix:///var/run/docker.sock
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list && \
-    apt update && apt install -y \
-    docker-ce-cli \
-    docker-compose-plugin && \
-    apt clean && rm -rf /var/lib/apt/lists/*
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc && \
+    chmod a+r /etc/apt/keyrings/docker.asc && \
+    cat > /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/debian
+Suites: $(. /etc/os-release && echo "$VERSION_CODENAME")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        docker-ce-cli \
+        docker-compose-plugin && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Java
+ENV JAVA_VERSION=17
+ENV JAVA_OPTS="-Dhudson.model.DirectoryBrowserSupport.CSP=\"\""
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openjdk-${JAVA_VERSION}-jre-headless && \
+    java --version && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Jenkins
 ENV JENKINS_URL=http://jenkins:8080/
@@ -57,11 +77,3 @@ ENV JENKINS_JAVA_OPTS=-Dorg.jenkinsci.plugins.gitclient.Git.timeOut=60
 WORKDIR /var
 COPY --chmod=755 jenkins-agent.sh /usr/local/bin/jenkins-agent.sh
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/jenkins-agent.sh"]
-
-# Java
-ENV JAVA_VERSION=17
-ENV JAVA_OPTS="-Dhudson.model.DirectoryBrowserSupport.CSP=\"\""
-RUN apt update && apt install -y \
-    openjdk-$JAVA_VERSION-jre && \
-    apt clean && rm -rf /var/lib/apt/lists/*
-RUN java --version

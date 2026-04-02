@@ -4,42 +4,47 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 COPY machine-id /etc/machine-id
 
-# NodeJS
-RUN curl -sL "https://deb.nodesource.com/setup_22.x" | bash - && \
-    apt install -y nodejs
+# NodeJS 22
+RUN curl -fsSL "https://deb.nodesource.com/setup_22.x" | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # itch.io
-RUN curl -sL "https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default" -o butler.zip && \
-    unzip butler.zip && \
-    chmod +x butler && \
-    mv butler /usr/local/bin && \
-    rm butler.zip && \
+RUN curl -fsSL "https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default" -o /tmp/butler.zip && \
+    unzip /tmp/butler.zip -d /tmp/butler && \
+    chmod +x /tmp/butler/butler && \
+    mv /tmp/butler/butler /usr/local/bin/butler && \
+    rm -rf /tmp/butler /tmp/butler.zip && \
     butler --help
 
 # Steam SDK
 RUN dpkg --add-architecture i386 && \
-    apt update && \
-    apt install -y lib32gcc-s1 && \
-    ln -s /usr/local/bin/steamcmd.sh /usr/local/bin/steamcmd && \
-    curl -sL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" -o steamcmd.tar.gz && \
-    tar -xzf steamcmd.tar.gz -C /usr/local/bin && \
-    rm steamcmd.tar.gz && \
-    steamcmd +quit
+    apt-get update && \
+    apt-get install -y --no-install-recommends lib32gcc-s1 && \
+    curl -fsSL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" -o /tmp/steamcmd.tar.gz && \
+    tar -xzf /tmp/steamcmd.tar.gz -C /usr/local/bin && \
+    ln -sf /usr/local/bin/steamcmd.sh /usr/local/bin/steamcmd && \
+    rm -f /tmp/steamcmd.tar.gz && \
+    steamcmd +quit && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # PHP
 ENV PHP_VERSION=8.2
-RUN apt install -y \
-    php \
-    php-xsl \
-    php-fileinfo \
-    php-sockets \
-    php-exif \
-    php-intl \
-    php-dom \
-    php-zip \
-    php-curl \
-    php-mbstring \
-    php-imap
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        php \
+        php-curl \
+        php-exif \
+        php-imap \
+        php-intl \
+        php-mbstring \
+        php-sockets \
+        php-xml \
+        php-zip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Farah
 ENV COMPOSE_UNITY="composer -d /var/unity"
