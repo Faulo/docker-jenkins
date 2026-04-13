@@ -15,18 +15,11 @@ if not "%~1"=="" set "EFFECTIVE_JENKINS_SECRET=%~1"
 if not "%~2"=="" set "EFFECTIVE_JENKINS_AGENT_NAME=%~2"
 if not "%~3"=="" set "EFFECTIVE_JENKINS_URL=%~3"
 
-rem Optional: Default für WorkDir, falls nicht gesetzt
-if "%JENKINS_AGENT_WORKDIR%"=="" set "JENKINS_AGENT_WORKDIR=C:\jenkins"
-
 echo Downloading agent.jar from %EFFECTIVE_JENKINS_URL%
 curl.exe -fsSL "%EFFECTIVE_JENKINS_URL%jnlpJars/agent.jar" -o agent.jar
 if errorlevel 1 exit /b %errorlevel%
 
 echo Starting Jenkins agent "%EFFECTIVE_JENKINS_AGENT_NAME%"
-java %JENKINS_JAVA_OPTS% -jar agent.jar ^
-  -url "%EFFECTIVE_JENKINS_URL%" ^
-  -secret "%EFFECTIVE_JENKINS_SECRET%" ^
-  -name "%EFFECTIVE_JENKINS_AGENT_NAME%" ^
-  -workDir "%JENKINS_AGENT_WORKDIR%"
+java %JENKINS_JAVA_OPTS% -jar agent.jar -url "%EFFECTIVE_JENKINS_URL%" -secret "%EFFECTIVE_JENKINS_SECRET%" -name "%EFFECTIVE_JENKINS_AGENT_NAME%" -workDir "%JENKINS_AGENT_WORKDIR%"
 
 exit /b %errorlevel%
