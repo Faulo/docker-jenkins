@@ -90,11 +90,6 @@ RUN install -m 0755 -d /etc/apt/keyrings && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Unity 2021 OpenSSL compatibility
-RUN curl -fsSL http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb -o /tmp/libssl1.1.deb && \
-    dpkg -i /tmp/libssl1.1.deb && \
-    rm /tmp/libssl1.1.deb
-
 # VNC Server
 ENV USER="root"
 ENV RESOLUTION="1920x1080"
