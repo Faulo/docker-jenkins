@@ -63,7 +63,7 @@ RUN apt-get update && \
 # Java
 ENV JAVA_VERSION=21
 ENV JAVA_OPTS="-Dhudson.model.DirectoryBrowserSupport.CSP=\"\""
-RUN apt-get extrepo enable zulu-openjdk && \
+RUN extrepo enable zulu-openjdk && \
     apt-get update && \
     apt-get install -y --no-install-recommends zulu${JAVA_VERSION}-jre-headless && \
     apt-get clean && \
