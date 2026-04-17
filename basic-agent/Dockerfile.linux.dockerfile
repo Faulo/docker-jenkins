@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     pciutils \
     tini \
     wget \
+    extrepo \
     zip \
     unzip && \
     echo "$LANG UTF-8" > /etc/locale.gen && \
@@ -62,12 +63,12 @@ RUN apt-get update && \
 # Java
 ENV JAVA_VERSION=21
 ENV JAVA_OPTS="-Dhudson.model.DirectoryBrowserSupport.CSP=\"\""
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        openjdk-${JAVA_VERSION}-jre-headless && \
-    java --version && \
+RUN apt-get extrepo enable zulu-openjdk && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends zulu${JAVA_VERSION}-jre-headless && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    java --version
 
 # Jenkins
 ENV JENKINS_URL=http://jenkins:8080/
