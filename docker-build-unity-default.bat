@@ -1,7 +1,7 @@
 setlocal
 cd %~dp0
 set DOCKER_CONTEXT=default
-set DOCKER_IMAGE=basic-agent
+set DOCKER_IMAGE=unity-agent
 for /f %%i in ('docker --context %DOCKER_CONTEXT% info --format "{{.OSType}}"') do SET DOCKER_OS=%%i
 pushd %DOCKER_IMAGE%
 call docker --context %DOCKER_CONTEXT% build -t tmp/%DOCKER_IMAGE%:latest . -f Dockerfile.%DOCKER_OS%.dockerfile

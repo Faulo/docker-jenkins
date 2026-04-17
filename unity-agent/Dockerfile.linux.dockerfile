@@ -1,6 +1,145 @@
-FROM faulo/ci-agent:latest-linux
+FROM debian:bookworm-slim
 
 ARG DEBIAN_FRONTEND=noninteractive
+
+# Jenkins
+WORKDIR /var
+
+USER root
+
+ENV JENKINS_URL=http://jenkins:8080/
+ENV JENKINS_SECRET=InsertSecretHere
+ENV JENKINS_AGENT_NAME=InsertAgentNameHere
+ENV JENKINS_JAVA_OPTS=-Dorg.jenkinsci.plugins.gitclient.Git.timeOut=60
+
+COPY --chmod=755 jenkins-agent.sh /usr/local/bin/jenkins-agent.sh
+
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/jenkins-agent.sh"]
+
+# Base tools + locale
+ENV LANG=C.UTF-8
+
+COPY machine-id /etc/machine-id
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    git \
+    git-lfs \
+    gnupg \
+    locales \
+    nano \
+    pciutils \
+    tini \
+    wget \
+    extrepo \
+    zip \
+    unzip && \
+    echo "$LANG UTF-8" > /etc/locale.gen && \
+    locale-gen "$LANG" && \
+    install -m 0755 -d /etc/apt/keyrings && \
+    curl --version && \
+    git --version && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Plastic
+RUN wget -qO- https://www.plasticscm.com/plasticrepo/stable/debian/Release.key | \
+        gpg --dearmor -o /etc/apt/keyrings/plasticscm-stable.gpg && \
+    chmod a+r /etc/apt/keyrings/plasticscm-stable.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/plasticscm-stable.gpg] https://www.plasticscm.com/plasticrepo/stable/debian ./" \
+        > /etc/apt/sources.list.d/plasticscm-stable.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        plasticscm-client-core && \
+    cm version && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Docker CLI
+ENV DOCKER_HOST=unix:///var/run/docker.sock
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc && \
+    chmod a+r /etc/apt/keyrings/docker.asc && \
+    cat > /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/debian
+Suites: $(. /etc/os-release && echo "$VERSION_CODENAME")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        docker-ce-cli \
+        docker-compose-plugin && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Java
+ENV JAVA_VERSION=21
+ENV JAVA_OPTS="-Dhudson.model.DirectoryBrowserSupport.CSP=\"\""
+
+RUN extrepo enable zulu-openjdk && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends zulu${JAVA_VERSION}-jre-headless && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    java --version
+
+# NodeJS 22
+RUN curl -fsSL "https://deb.nodesource.com/setup_22.x" | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# itch.io
+RUN curl -fsSL "https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default" -o /tmp/butler.zip && \
+    unzip /tmp/butler.zip -d /tmp/butler && \
+    chmod +x /tmp/butler/butler && \
+    mv /tmp/butler/butler /usr/local/bin/butler && \
+    rm -rf /tmp/butler /tmp/butler.zip && \
+    butler --help
+
+# Steam SDK
+RUN dpkg --add-architecture i386 && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends lib32gcc-s1 && \
+    curl -fsSL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" -o /tmp/steamcmd.tar.gz && \
+    tar -xzf /tmp/steamcmd.tar.gz -C /usr/local/bin && \
+    ln -sf /usr/local/bin/steamcmd.sh /usr/local/bin/steamcmd && \
+    rm -f /tmp/steamcmd.tar.gz && \
+    steamcmd +quit && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# PHP
+ENV PHP_VERSION=8.2
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        php \
+        php-curl \
+        php-exif \
+        php-imap \
+        php-intl \
+        php-mbstring \
+        php-sockets \
+        php-xml \
+        php-zip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Farah
+ENV COMPOSE_UNITY="composer -d /var/unity"
+ENV COMPOSER_ALLOW_SUPERUSER="1"
+
+COPY --chmod=755 --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+COPY --chmod=755 unity/composer.json /var/unity/
+COPY --chmod=755 unity/config /var/unity/config/
+COPY --chmod=755 unity/compose-unity /usr/local/bin/
+
+RUN compose-unity update --no-interaction --no-dev --optimize-autoloader --classmap-authoritative && \
+    compose-unity exec unity-build
 
 # .NET SDK
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1"

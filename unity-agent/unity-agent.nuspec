@@ -1,0 +1,24 @@
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>unity-agent</id>
+    <version>1.0.0</version>
+    <title>Slothsoft's Unity Agent</title>
+    <authors>Daniel Schulz</authors>
+    <description>Slothsoft's Unity Agent</description>
+    <dependencies>
+      <dependency id="zip" />
+      <dependency id="nano" />
+      <dependency id="curl" />
+      <dependency id="git" />
+      <dependency id="docker-cli" />
+      <dependency id="openjdk" version="[21,22)" />
+      <dependency id="nodejs" />
+      <dependency id="butler" />
+      <dependency id="steamcmd" />
+      <dependency id="php" version="[8.2,8.3)" />
+      <dependency id="composer" />
+      <dependency id="dotnet-sdk" version="[9,10)" />
+      <dependency id="unity-hub" />
+    </dependencies>
+  </metadata>
+</package>
