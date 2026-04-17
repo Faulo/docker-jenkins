@@ -60,7 +60,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Java
-ENV JAVA_VERSION=17
+ENV JAVA_VERSION=21
 ENV JAVA_OPTS="-Dhudson.model.DirectoryBrowserSupport.CSP=\"\""
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \

@@ -36,7 +36,7 @@ COPY jenkins-agent.bat .
 ENTRYPOINT ["cmd", "/c", "C:\\jenkins\\jenkins-agent.bat"]
 
 # Java
-ENV JAVA_VERSION=17
+ENV JAVA_VERSION=21
 ENV JAVA_OPTS="-Dhudson.model.DirectoryBrowserSupport.CSP=\"\""
 RUN choco install -y --no-progress \
     openjdk$env:JAVA_VERSION

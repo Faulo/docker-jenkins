@@ -1,4 +1,4 @@
-FROM jenkins/inbound-agent:latest-jdk17
+FROM jenkins/inbound-agent:latest-jdk21
 
 ARG DEBIAN_FRONTEND=noninteractive
 
