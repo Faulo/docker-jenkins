@@ -43,6 +43,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# Unity 2021 OpenSSL compatibility
+RUN curl -fsSL https://security.debian.org/debian-security/pool/updates/main/o/openssl/libssl1.1_1.1.1w-0+deb11u5_amd64.deb -o /tmp/libssl1.1.deb && \
+    apt install -y /tmp/libssl1.1.deb && \
+    rm /tmp/libssl1.1.deb
+
 # Plastic
 RUN wget -qO- https://www.plasticscm.com/plasticrepo/stable/debian/Release.key | \
         gpg --dearmor -o /etc/apt/keyrings/plasticscm-stable.gpg && \
