@@ -79,8 +79,8 @@ jobs:
                   context: "{{defaultContext}}:${{matrix.image}}"
                   file: Dockerfile.${{matrix.os}}.dockerfile
                   provenance: false
-                  cache-from: type=gha
-                  cache-to: type=gha
+                  cache-from: type=gha,scope=jenkins-${{env.os}}-${{matrix.image}}
+                  cache-to: type=gha,mode=max,scope=jenkins-${{env.os}}-${{matrix.image}},ignore-error=true
     merge:
         runs-on: ubuntu-24.04
         needs:
