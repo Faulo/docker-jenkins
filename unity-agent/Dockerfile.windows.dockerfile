@@ -19,8 +19,8 @@ RUN [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePoin
     iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 
 # Tools
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1"
-ENV DOTNET_CLI_UI_LANGUAGE="en"
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0
+ENV DOTNET_CLI_UI_LANGUAGE=en
 ENV DOCKER_HOST=npipe:////./pipe/docker_engine
 ENV JAVA_VERSION=21
 ENV JAVA_OPTS="-Dhudson.model.DirectoryBrowserSupport.CSP=\"\""

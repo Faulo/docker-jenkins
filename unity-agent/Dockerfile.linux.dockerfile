@@ -18,6 +18,7 @@ ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/jenkins-agent.sh"]
 
 # Base tools + locale
 ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
 COPY machine-id /etc/machine-id
 
@@ -151,8 +152,8 @@ RUN compose-unity update --no-interaction --no-dev --optimize-autoloader --class
     compose-unity exec unity-build
 
 # .NET SDK
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1"
-ENV DOTNET_CLI_UI_LANGUAGE="en"
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0
+ENV DOTNET_CLI_UI_LANGUAGE=en
 ENV PATH="/root/.dotnet/tools:${PATH}"
 RUN curl -fsSL https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -o /tmp/packages-microsoft-prod.deb && \
     dpkg -i /tmp/packages-microsoft-prod.deb && \
