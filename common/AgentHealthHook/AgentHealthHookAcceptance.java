@@ -14,6 +14,7 @@ import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -29,6 +30,7 @@ import java.util.logging.Logger;
 
 public final class AgentHealthHookAcceptance {
     private static final Duration WAIT = Duration.ofSeconds(15);
+    private static final Duration PROBE_TIMEOUT = Duration.ofSeconds(1);
     private static final int TRANSFER_BYTES = 32 * 1024 * 1024;
 
     private AgentHealthHookAcceptance() {
@@ -55,6 +57,13 @@ public final class AgentHealthHookAcceptance {
             long initialSuccess = awaitLastSuccess(statusFile, 0);
             Transfer leftToRight = startTransfer(pair.left, pair.tasks);
             Transfer rightToLeft = startTransfer(pair.right, pair.tasks);
+            Future<?> probes = pair.tasks.submit(() -> {
+                for (int count = 0; count < 10; count++) {
+                    assertHealthProbe(true);
+                    TimeUnit.MILLISECONDS.sleep(100);
+                }
+                return null;
+            });
 
             long successUnderLoad = awaitLastSuccess(statusFile, initialSuccess);
             if (successUnderLoad <= initialSuccess) {
@@ -63,6 +72,7 @@ public final class AgentHealthHookAcceptance {
 
             leftToRight.await();
             rightToLeft.await();
+            probes.get(WAIT.toMillis(), TimeUnit.MILLISECONDS);
         }
         awaitState(statusFile, "reconnecting");
     }
@@ -80,7 +90,8 @@ public final class AgentHealthHookAcceptance {
                 }
 
                 awaitDiagnostic(statusFile, "heartbeat-timeout");
-                TimeUnit.SECONDS.sleep(3);
+                awaitLastSuccessOlderThan(statusFile, Duration.ofSeconds(2));
+                assertHealthProbe(false);
                 int pending = pendingCalls(pair.left) + pendingCalls(pair.right);
                 if (pending != 1) {
                     throw new AssertionError("expected exactly one pending control heartbeat, got " + pending);
@@ -89,6 +100,25 @@ public final class AgentHealthHookAcceptance {
                 release.countDown();
             }
             awaitLastSuccess(statusFile, initialSuccess);
+            assertHealthProbe(true);
+        }
+    }
+
+    private static void assertHealthProbe(boolean expectedHealthy) throws Exception {
+        String executable = System.getProperty("os.name").startsWith("Windows")
+            ? "C:/jenkins/agent.exe"
+            : "/jenkins/agent";
+        Process process = new ProcessBuilder(executable, "--health")
+            .redirectErrorStream(true)
+            .start();
+        if (!process.waitFor(PROBE_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)) {
+            process.destroyForcibly();
+            throw new AssertionError("external health probe exceeded one second");
+        }
+        String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
+        boolean healthy = process.exitValue() == 0;
+        if (healthy != expectedHealthy) {
+            throw new AssertionError("external health probe result was " + process.exitValue() + ": " + output);
         }
     }
 
@@ -126,6 +156,19 @@ public final class AgentHealthHookAcceptance {
 
     private static void awaitDiagnostic(Path statusFile, String expected) throws Exception {
         awaitStatus(statusFile, "diagnostic", expected);
+    }
+
+    private static void awaitLastSuccessOlderThan(Path statusFile, Duration age) throws Exception {
+        long deadline = System.nanoTime() + WAIT.toNanos();
+        do {
+            Map<String, String> status = readStatus(statusFile);
+            long lastSuccess = Long.parseLong(status.getOrDefault("lastSuccess", "0"));
+            if (lastSuccess > 0 && System.currentTimeMillis() - lastSuccess > age.toMillis()) {
+                return;
+            }
+            TimeUnit.MILLISECONDS.sleep(100);
+        } while (System.nanoTime() < deadline);
+        throw new AssertionError("last successful control heartbeat did not become stale");
     }
 
     private static void awaitStatus(Path statusFile, String key, String expected) throws Exception {

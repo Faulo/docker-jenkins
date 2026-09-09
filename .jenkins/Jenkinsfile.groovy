@@ -241,14 +241,14 @@ def healthAcceptanceDockerfile() {
     if (isUnix()) {
         return '''FROM IMAGE_TO_TEST
 COPY common/AgentHealthHook/AgentHealthHookAcceptance.java /tmp/agent-health-test/AgentHealthHookAcceptance.java
-RUN mkdir -p /tmp/agent-health-test/classes && javac -cp /usr/share/jenkins/agent.jar -d /tmp/agent-health-test/classes /tmp/agent-health-test/AgentHealthHookAcceptance.java && JENKINS_HEALTH_FILE=/tmp/agent-health-test.status JENKINS_HEALTH_INTERVAL_SECONDS=1 JENKINS_HEALTH_TIMEOUT_SECONDS=1 java -javaagent:/jenkins/agent-health.jar -cp /usr/share/jenkins/agent.jar:/tmp/agent-health-test/classes agent.health.AgentHealthHookAcceptance
+RUN mkdir -p /tmp/agent-health-test/classes && javac -cp /usr/share/jenkins/agent.jar -d /tmp/agent-health-test/classes /tmp/agent-health-test/AgentHealthHookAcceptance.java && JENKINS_HEALTH_FILE=/tmp/agent-health-test.status JENKINS_HEALTH_INTERVAL_SECONDS=1 JENKINS_HEALTH_TIMEOUT_SECONDS=1 JENKINS_HEALTH_STALE_SECONDS=2 java -javaagent:/jenkins/agent-health.jar -cp /usr/share/jenkins/agent.jar:/tmp/agent-health-test/classes agent.health.AgentHealthHookAcceptance
 '''.replace('IMAGE_TO_TEST', candidateImage())
     }
     return '''# escape=`
 FROM IMAGE_TO_TEST
 SHELL ["C:\\\\Windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\powershell", "-NonInteractive", "-NoProfile", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 COPY common/AgentHealthHook/AgentHealthHookAcceptance.java C:/agent-health-test/AgentHealthHookAcceptance.java
-RUN New-Item -ItemType Directory -Path C:/agent-health-test/classes -Force | Out-Null; javac.exe -cp C:/ProgramData/Jenkins/agent.jar -d C:/agent-health-test/classes C:/agent-health-test/AgentHealthHookAcceptance.java; if ($LASTEXITCODE -ne 0) { throw 'Failed to compile health acceptance test' }; $env:JENKINS_HEALTH_FILE = 'C:/agent-health-test.status'; $env:JENKINS_HEALTH_INTERVAL_SECONDS = '1'; $env:JENKINS_HEALTH_TIMEOUT_SECONDS = '1'; java.exe -javaagent:C:/jenkins/agent-health.jar -cp 'C:/ProgramData/Jenkins/agent.jar;C:/agent-health-test/classes' agent.health.AgentHealthHookAcceptance; if ($LASTEXITCODE -ne 0) { throw 'Health acceptance test failed' }
+RUN New-Item -ItemType Directory -Path C:/agent-health-test/classes -Force | Out-Null; javac.exe -cp C:/ProgramData/Jenkins/agent.jar -d C:/agent-health-test/classes C:/agent-health-test/AgentHealthHookAcceptance.java; if ($LASTEXITCODE -ne 0) { throw 'Failed to compile health acceptance test' }; $env:JENKINS_HEALTH_FILE = 'C:/agent-health-test.status'; $env:JENKINS_HEALTH_INTERVAL_SECONDS = '1'; $env:JENKINS_HEALTH_TIMEOUT_SECONDS = '1'; $env:JENKINS_HEALTH_STALE_SECONDS = '2'; java.exe -javaagent:C:/jenkins/agent-health.jar -cp 'C:/ProgramData/Jenkins/agent.jar;C:/agent-health-test/classes' agent.health.AgentHealthHookAcceptance; if ($LASTEXITCODE -ne 0) { throw 'Health acceptance test failed' }
 '''.replace('IMAGE_TO_TEST', candidateImage())
 }
 
