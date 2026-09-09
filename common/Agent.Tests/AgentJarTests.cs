@@ -1,8 +1,16 @@
+using System.IO;
 using NUnit.Framework;
 
 namespace Agent.Tests;
 
 sealed class AgentJarTests {
+    [Test]
+    public void DestinationIsNextToEntrypoint() {
+        string directory = Path.Combine("some", "agent", "directory");
+
+        Assert.That(AgentJar.DestinationPath(directory), Is.EqualTo(Path.Combine(directory, "agent.jar")));
+    }
+
     [TestCase("https://jenkins.example/", "https://jenkins.example/jnlpJars/agent.jar")]
     [TestCase("https://jenkins.example/root", "https://jenkins.example/root/jnlpJars/agent.jar")]
     [TestCase("https://jenkins.example/root/", "https://jenkins.example/root/jnlpJars/agent.jar")]

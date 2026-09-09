@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -7,82 +6,115 @@ namespace Agent.Tests;
 
 sealed class AgentProcessTests {
     [Test]
-    public void LinuxEnvironmentAppliesIndexedValuesAfterProcessEnvironment() {
-        string name = $"AGENT_TEST_{Guid.NewGuid():N}";
-        Environment.SetEnvironmentVariable(name, "from-process-environment");
-        try {
-            var environment = AgentProcess.LinuxEnvironment(
-                new Dictionary<string, string> {
-                    [name] = "from-indexed-environment"
-                },
-                []
-            );
+    public void JavaStartInfoMapsLauncherEnvironmentAndPreservesArguments() {
+        var environment = new Dictionary<string, string?> {
+            ["JENKINS_JAVA_BIN"] = "/custom/java",
+            ["JENKINS_JAVA_OPTS"] = "-Xmx1g '-Dmessage=hello world'",
+            ["JENKINS_URL"] = "https://jenkins.example/",
+            ["JENKINS_SECRET"] = "secret",
+            ["JENKINS_AGENT_NAME"] = "agent name",
+            ["JENKINS_TUNNEL"] = "tunnel.example:50000",
+            ["JENKINS_AGENT_WORKDIR"] = "/jenkins",
+            ["JENKINS_WEB_SOCKET"] = "true",
+            ["JENKINS_DIRECT_CONNECTION"] = "direct.example:50000",
+            ["JENKINS_INSTANCE_IDENTITY"] = "identity",
+            ["JENKINS_PROTOCOLS"] = "JNLP4-connect",
+            ["REMOTING_OPTS"] = "-noReconnectAfter 1h"
+        };
 
-            Assert.That(environment, Does.Contain($"{name}=from-indexed-environment"));
-            Assert.That(environment, Does.Not.Contain($"{name}=from-process-environment"));
-        } finally {
-            Environment.SetEnvironmentVariable(name, null);
-        }
-    }
-
-    [Test]
-    public void LinuxEnvironmentPreservesJavaOptions() {
-        var environment = AgentProcess.LinuxEnvironment(
-            new Dictionary<string, string> {
-                ["JENKINS_JAVA_OPTS"] = "-Xmx1g"
-            },
-            []
-        );
-
-        Assert.That(
+        var start = AgentProcess.JavaStartInfo(
+            ["-disableHttpsCertValidation"],
             environment,
-            Does.Contain("JENKINS_JAVA_OPTS=-Xmx1g")
+            false,
+            "/jenkins/agent.jar"
         );
-    }
-
-    [TestCase(" TrUe ", "JENKINS_WEB_SOCKET=true")]
-    [TestCase("false", null)]
-    public void LinuxEnvironmentNormalizesIndexedWebSocket(string value, string? expected) {
-        var environment = AgentProcess.LinuxEnvironment(
-            new Dictionary<string, string> {
-                [AgentEnvironment.WEB_SOCKET] = value
-            },
-            []
-        );
-
-        Assert.That(
-            environment.SingleOrDefault(item => item.StartsWith($"{AgentEnvironment.WEB_SOCKET}=", StringComparison.Ordinal)),
-            Is.EqualTo(expected)
-        );
-    }
-
-    [Test]
-    public void WindowsStartInfoPreservesArguments() {
-        var start = AgentProcess.WindowsStartInfo(["-url", "https://jenkins.example/with space", "Mörkö"]);
 
         Assert.Multiple(() => {
-            Assert.That(start.FileName, Is.EqualTo("powershell.exe"));
+            Assert.That(start.FileName, Is.EqualTo("/custom/java"));
             Assert.That(start.UseShellExecute, Is.False);
-            Assert.That(start.Environment.Values, Has.None.Contains("javaagent"));
             Assert.That(start.ArgumentList.ToArray(), Is.EqualTo(new[] {
-                "-File",
-                @"C:\ProgramData\Jenkins\jenkins-agent.ps1",
-                "-url",
-                "https://jenkins.example/with space",
-                "Mörkö"
+                "-Xmx1g",
+                "-Dmessage=hello world",
+                "-jar", "/jenkins/agent.jar",
+                "-secret", "secret",
+                "-name", "agent name",
+                "-tunnel", "tunnel.example:50000",
+                "-url", "https://jenkins.example/",
+                "-workDir", "/jenkins",
+                "-webSocket",
+                "-direct", "direct.example:50000",
+                "-protocols", "JNLP4-connect",
+                "-instanceIdentity", "identity",
+                "-noReconnectAfter", "1h",
+                "-disableHttpsCertValidation"
             }));
         });
     }
 
     [Test]
-    public void WindowsStartInfoPreservesExplicitJavaOptions() {
-        var start = AgentProcess.WindowsStartInfo(["-JenkinsJavaOpts", "-Xmx1g"]);
+    public void ExplicitConnectionArgumentsAreNotDuplicatedFromEnvironment() {
+        var environment = new Dictionary<string, string?> {
+            ["JENKINS_URL"] = "https://environment.example/",
+            ["JENKINS_SECRET"] = "environment-secret",
+            ["JENKINS_AGENT_NAME"] = "environment-name",
+            ["JENKINS_AGENT_WORKDIR"] = "/environment-work",
+            ["JENKINS_WEB_SOCKET"] = "true"
+        };
+        string[] arguments = [
+            "-url", "https://argument.example/",
+            "-secret", "argument-secret",
+            "-name", "argument-name",
+            "-workDir", "/argument-work",
+            "-webSocket"
+        ];
 
-        Assert.That(start.ArgumentList.ToArray(), Is.EqualTo(new[] {
-            "-File",
-            @"C:\ProgramData\Jenkins\jenkins-agent.ps1",
-            "-JenkinsJavaOpts",
-            "-Xmx1g"
-        }));
+        var start = AgentProcess.JavaStartInfo(arguments, environment, false, "/jenkins/agent.jar");
+
+        Assert.Multiple(() => {
+            Assert.That(start.ArgumentList.ToArray(), Does.Not.Contain("environment-secret"));
+            Assert.That(start.ArgumentList.ToArray(), Does.Not.Contain("environment-name"));
+            Assert.That(start.ArgumentList.ToArray().Count(value => value == "-webSocket"), Is.EqualTo(1));
+            Assert.That(start.ArgumentList.TakeLast(arguments.Length), Is.EqualTo(arguments));
+        });
+    }
+
+    [TestCase(false, "/opt/java/openjdk", "/opt/java/openjdk/bin/java")]
+    [TestCase(true, "C:/openjdk-21", "C:/openjdk-21/bin/java.exe")]
+    public void JavaHomeSelectsPlatformExecutable(bool windows, string javaHome, string expected) {
+        var start = AgentProcess.JavaStartInfo(
+            [],
+            new Dictionary<string, string?> { ["JAVA_HOME"] = javaHome },
+            windows,
+            windows ? "C:/jenkins/agent.jar" : "/jenkins/agent.jar"
+        );
+
+        Assert.That(start.FileName, Is.EqualTo(expected));
+    }
+
+    [TestCase(false, "java")]
+    [TestCase(true, "java.exe")]
+    public void JavaExecutableFallsBackToPath(bool windows, string expected) {
+        var start = AgentProcess.JavaStartInfo(
+            [],
+            new Dictionary<string, string?>(),
+            windows,
+            windows ? "C:/jenkins/agent.jar" : "/jenkins/agent.jar"
+        );
+
+        Assert.That(start.FileName, Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void InvalidOptionQuotingDoesNotRepeatTheConfiguredValue() {
+        const string configured = "'highly-sensitive-value";
+        var environment = new Dictionary<string, string?> {
+            ["JENKINS_JAVA_OPTS"] = configured
+        };
+
+        var exception = Assert.Throws<ConfigurationException>(() =>
+            AgentProcess.JavaStartInfo([], environment, false, "/jenkins/agent.jar")
+        );
+
+        Assert.That(exception!.Message, Does.Contain("JENKINS_JAVA_OPTS").And.Not.Contain(configured));
     }
 }

@@ -117,6 +117,16 @@ def testWebSocket() {
             testCase.enabled ? 1 : 0,
             "WebSocket ${testCase.description} launch arguments"
         )
+        assertContains(
+            result.logs,
+            isUnix() ? '-jar /jenkins/agent.jar' : '-jar C:/jenkins/agent.jar',
+            "WebSocket ${testCase.description} adjacent agent JAR"
+        )
+        assertNotContains(
+            result.logs,
+            isUnix() ? '/usr/share/jenkins/agent.jar' : 'C:/ProgramData/Jenkins/agent.jar',
+            "WebSocket ${testCase.description} inherited agent JAR"
+        )
     }
 
     ['yes', 'enabled', 'ture'].each { value ->
@@ -232,10 +242,10 @@ def testControllerAgent() {
     }
 
     def absenceCommand = isUnix()
-        ? "sh -c 'test ! -e /jenkins/agent-health.jar'"
-        : "powershell.exe -NoProfile -Command \"if (Test-Path -LiteralPath C:/jenkins/agent-health.jar) { exit 1 }\""
+        ? "sh -c 'test ! -e /jenkins/agent-health.jar && test ! -e /usr/local/bin/jenkins-agent'"
+        : "powershell.exe -NoProfile -Command \"if ((Test-Path -LiteralPath C:/jenkins/agent-health.jar) -or (Test-Path -LiteralPath C:/ProgramData/Jenkins/jenkins-agent.ps1)) { exit 1 }\""
     def absence = runContainer(absenceCommand, [], null, false)
-    assertValue(absence.exitCode, '0', 'runtime image excludes custom Remoting health hook')
+    assertValue(absence.exitCode, '0', 'runtime image excludes Java hook and upstream launcher')
 }
 
 def testLiveHealth() {
@@ -257,6 +267,14 @@ def testLiveHealth() {
             exitCode = execStatus("docker exec ${containerId} ${healthCommand}").toString()
         }
         assertValue(exitCode, '0', 'health with managed agent exit code')
+        def jarCommand = isUnix()
+            ? "test -f /jenkins/agent.jar"
+            : "powershell.exe -NoProfile -Command \"if (-not (Test-Path -LiteralPath C:/jenkins/agent.jar)) { exit 1 }\""
+        assertValue(
+            execStatus("docker exec ${containerId} ${jarCommand}").toString(),
+            '0',
+            'controller agent JAR is adjacent to the entrypoint'
+        )
     } finally {
         exec "docker rm --force --volumes ${containerId}"
     }
@@ -266,6 +284,13 @@ def testImage() {
     testEntrypoint()
     testControllerAgent()
     testLiveHealth()
+    def user = runContainer(isUnix() ? 'id -u' : 'whoami', [], null, false)
+    assertValue(user.exitCode, '0', 'runtime user probe exit code')
+    if (isUnix()) {
+        assertValue(user.logs.trim(), '0', 'runtime user')
+    } else {
+        assertContains(user.logs.toLowerCase(), 'containeradministrator', 'runtime user')
+    }
     def scriptSuffix = isUnix() ? '' : '.cmd'
     def probes = [
         [command: 'docker --version', expected: 'Docker version 29.'],
@@ -295,7 +320,7 @@ properties([
     disableResume()
 ])
 
-def hosts = ['Garl']
+def hosts = ['Dende', 'Garl']
 def dockerNamespace = params.DOCKER_NAMESPACE ?: 'faulo'
 
 stage('Integration Tests') {
