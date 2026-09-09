@@ -16,6 +16,20 @@ def assertNotContains(actual, unexpected, description) {
     }
 }
 
+def exec(command) {
+    if (isUnix()) {
+        sh command
+    } else {
+        bat command
+    }
+}
+
+def execStdout(command) {
+    return isUnix()
+        ? sh(script: command, returnStdout: true)
+        : bat(script: "@${command}", returnStdout: true)
+}
+
 def candidateImage() {
     return "$DOCKER_NAMESPACE/$DOCKER_IMAGE"
 }
