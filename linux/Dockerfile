@@ -40,7 +40,9 @@ ADD https://nodejs.org/dist/latest-v${NODE_MAJOR}.x/SHASUMS256.txt /tmp/node-sha
 
 RUN node_archive="$(sed -nE "s/^[0-9a-f]+  (node-v${NODE_MAJOR}\\.[0-9]+\\.[0-9]+-linux-x64\\.tar\\.gz)$/\\1/p" /tmp/node-shasums)" && \
     test -n "$node_archive" && \
-    curl -fsSL "https://nodejs.org/dist/latest-v${NODE_MAJOR}.x/${node_archive}" -o "/tmp/${node_archive}" && \
+    node_version="${node_archive#node-v}" && \
+    node_version="${node_version%-linux-x64.tar.gz}" && \
+    curl -fsSL "https://nodejs.org/dist/v${node_version}/${node_archive}" -o "/tmp/${node_archive}" && \
     (cd /tmp && grep "  ${node_archive}$" node-shasums | sha256sum -c -) && \
     tar -xzf "/tmp/${node_archive}" --strip-components=1 -C /usr/local && \
     rm -f "/tmp/${node_archive}" /tmp/node-shasums && \

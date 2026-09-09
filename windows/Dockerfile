@@ -83,7 +83,7 @@ RUN $nodePattern = '(?m)^(?<hash>[0-9a-f]{64})\s+\*?(?<archive>node-v(?<version>
     $archiveName = $nodeRelease.Groups['archive'].Value; \
     $archive = 'C:/' + $archiveName; \
     $nodeVersion = $nodeRelease.Groups['version'].Value; \
-    $nodeUrl = 'https://nodejs.org/dist/latest-v' + $env:NODE_MAJOR + '.x/' + $archiveName; \
+    $nodeUrl = 'https://nodejs.org/dist/v' + $nodeVersion + '/' + $archiveName; \
     curl.exe -fsSL $nodeUrl -o $archive; \
     if ($LASTEXITCODE -ne 0) { throw 'Failed to download Node.js' }; \
     $actualHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $archive).Hash; \
