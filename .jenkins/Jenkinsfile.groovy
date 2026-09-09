@@ -16,6 +16,13 @@ def assertNotContains(actual, unexpected, description) {
     }
 }
 
+def assertOccurrences(actual, expected, count, description) {
+    def occurrences = actual.count(expected)
+    if (occurrences != count) {
+        error "${description}: expected '${expected}' ${count} time(s), got ${occurrences} in '${actual}'"
+    }
+}
+
 def exec(command) {
     if (isUnix()) {
         sh command
@@ -44,13 +51,17 @@ def environmentProbe(variable) {
         : "-Cmd \"[Environment]::GetEnvironmentVariable('${variable}')\""
 }
 
+def javaProbe() {
+    return isUnix() ? '/bin/echo' : 'C:/mingit/usr/bin/echo.exe'
+}
+
 def withProjectEnvironment(Closure body) {
     def values = readProperties file: '.env'
     withEnv(values.collect { name, value -> "${name}=${value}" }, body)
 }
 
 def runContainer(arguments, environment = [], config = null, inheritEntrypoint = true) {
-    def environmentArguments = environment.collect { "--env ${it}" }.join(' ')
+    def environmentArguments = environment.collect { "--env \"${it}\"" }.join(' ')
     def entrypointArgument = inheritEntrypoint ? '' : '--entrypoint=""'
     def containerId = execStdout("docker create ${entrypointArgument} ${environmentArguments} ${candidateImage()} ${arguments}").trim()
     try {
@@ -67,7 +78,57 @@ def runContainer(arguments, environment = [], config = null, inheritEntrypoint =
     }
 }
 
+def testWebSocket() {
+    def baseEnvironment = [
+        'JENKINS_URL=https://jenkins.example.invalid/',
+        'JENKINS_SECRET=not-a-secret',
+        'JENKINS_AGENT_NAME=argument-probe',
+        "JENKINS_JAVA_BIN=${javaProbe()}"
+    ]
+    def cases = [
+        [description: 'default', value: null, enabled: true],
+        [description: 'empty', value: '', enabled: true],
+        [description: 'whitespace', value: '   ', enabled: true],
+        [description: 'one', value: '1', enabled: true],
+        [description: 'true', value: 'true', enabled: true],
+        [description: 'trimmed mixed-case true', value: ' TrUe ', enabled: true],
+        [description: 'zero', value: '0', enabled: false],
+        [description: 'false', value: 'false', enabled: false],
+        [description: 'trimmed mixed-case false', value: ' FaLsE ', enabled: false]
+    ]
+
+    cases.each { testCase ->
+        def environment = new ArrayList(baseEnvironment)
+        if (testCase.value != null) {
+            environment.add("JENKINS_WEB_SOCKET=${testCase.value}")
+        }
+        def result = runContainer('', environment)
+
+        assertValue(result.exitCode, '0', "WebSocket ${testCase.description} exit code")
+        assertOccurrences(
+            result.logs,
+            '-webSocket',
+            testCase.enabled ? 1 : 0,
+            "WebSocket ${testCase.description} launch arguments"
+        )
+    }
+
+    ['yes', 'enabled', 'ture'].each { value ->
+        def result = runContainer('', baseEnvironment + ["JENKINS_WEB_SOCKET=${value}"])
+
+        assertValue(result.exitCode, '1', "invalid WebSocket value '${value}' exit code")
+        assertContains(result.logs, 'JENKINS_WEB_SOCKET', "invalid WebSocket value '${value}' error")
+        assertContains(result.logs, 'true, false, 1, or 0', "invalid WebSocket value '${value}' error")
+        assertNotContains(result.logs, value, "invalid WebSocket value '${value}' error")
+    }
+
+    def explicit = runContainer('-webSocket', baseEnvironment)
+    assertValue(explicit.exitCode, '0', 'explicit WebSocket exit code')
+    assertOccurrences(explicit.logs, '-webSocket', 1, 'explicit WebSocket launch arguments')
+}
+
 def testEntrypoint() {
+    testWebSocket()
     def selectedEnvironment = runContainer(
         environmentProbe('JENKINS_AGENT_NAME'),
         [
