@@ -51,6 +51,7 @@ When the user has authorized the required release, Git, CI, and deployment opera
 3. After GitHub CI passes, pull the newly published `faulo` images on Docker contexts `dende` and `garl`.
 4. Run this image's Jenkins job with `DOCKER_NAMESPACE=faulo`, and inspect the complete console log.
 5. If publication or final integration fails, fix the issue and repeat the full cycle from Phase 1.
+6. If the feature was based on a ticket, update the ticket's body to reflect the shipped design and mark it complete.
 
 If the expected behavior or its test contract changes at any point, restart at Phase 1, step 1.
 
