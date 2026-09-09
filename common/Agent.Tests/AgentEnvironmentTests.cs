@@ -6,12 +6,7 @@ namespace Agent.Tests;
 
 sealed class AgentEnvironmentTests {
     static readonly string[] names = [
-        AgentEnvironment.WEB_SOCKET,
-        AgentEnvironment.HEALTH_FILE,
-        AgentEnvironment.HEALTH_GRACE_SECONDS,
-        AgentEnvironment.HEALTH_STALE_SECONDS,
-        AgentEnvironment.HEALTH_INTERVAL_SECONDS,
-        AgentEnvironment.HEALTH_TIMEOUT_SECONDS
+        AgentEnvironment.WEB_SOCKET
     ];
 
     [TestCase(null, true)]
@@ -43,48 +38,14 @@ sealed class AgentEnvironmentTests {
         );
     }
 
-    [TestCase("1", 1)]
-    [TestCase("01", 1)]
-    [TestCase("2147483647", int.MaxValue)]
-    public void ReadPositiveIntegerAcceptsPositiveDecimalIntegers(string value, int expected) {
-        Assert.That(AgentEnvironment.ReadPositiveInteger("SECONDS", value), Is.EqualTo(expected));
-    }
-
-    [TestCase("0")]
-    [TestCase("-1")]
-    [TestCase("+1")]
-    [TestCase(" 1 ")]
-    [TestCase("1.0")]
-    [TestCase("2147483648")]
-    public void ReadPositiveIntegerRejectsOtherValues(string value) {
-        var exception = Assert.Throws<ConfigurationException>(() =>
-            AgentEnvironment.ReadPositiveInteger("SECONDS", value)
-        );
-
-        Assert.That(exception!.Message, Is.EqualTo("environment variable SECONDS must be a positive integer"));
-    }
-
-    [TestCase(null)]
-    [TestCase("")]
-    [TestCase("   ")]
-    public void ReadPositiveIntegerUsesDefaultForBlankValues(string? value) {
-        Assert.That(AgentEnvironment.ReadPositiveInteger("SECONDS", value), Is.Null);
-    }
-
     [Test]
     public void NormalizeCanonicalizesManagedEnvironment() {
         WithEnvironment(() => {
             Environment.SetEnvironmentVariable(AgentEnvironment.WEB_SOCKET, " TrUe ");
-            Environment.SetEnvironmentVariable(AgentEnvironment.HEALTH_FILE, "   ");
-            Environment.SetEnvironmentVariable(AgentEnvironment.HEALTH_INTERVAL_SECONDS, "01");
 
             AgentEnvironment.Normalize([]);
 
-            Assert.Multiple(() => {
-                Assert.That(Environment.GetEnvironmentVariable(AgentEnvironment.WEB_SOCKET), Is.EqualTo("true"));
-                Assert.That(Environment.GetEnvironmentVariable(AgentEnvironment.HEALTH_FILE), Is.Null);
-                Assert.That(Environment.GetEnvironmentVariable(AgentEnvironment.HEALTH_INTERVAL_SECONDS), Is.EqualTo("1"));
-            });
+            Assert.That(Environment.GetEnvironmentVariable(AgentEnvironment.WEB_SOCKET), Is.EqualTo("true"));
         });
     }
 
