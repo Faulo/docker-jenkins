@@ -12,14 +12,16 @@ static class AgentHealth {
     const int DEFAULT_STALE_SECONDS = 30;
 
     public static int Run() {
-        string statusFile = Environment.GetEnvironmentVariable("JENKINS_HEALTH_FILE")
-                            ?? (OperatingSystem.IsWindows()
-                                ? @"C:\jenkins\agent-health.status"
-                                : "/jenkins/agent-health.status");
-        int graceSeconds = ReadPositiveSeconds("JENKINS_HEALTH_GRACE_SECONDS", DEFAULT_GRACE_SECONDS);
-        int staleSeconds = ReadPositiveSeconds("JENKINS_HEALTH_STALE_SECONDS", DEFAULT_STALE_SECONDS);
-        _ = ReadPositiveSeconds("JENKINS_HEALTH_INTERVAL_SECONDS", 10);
-        _ = ReadPositiveSeconds("JENKINS_HEALTH_TIMEOUT_SECONDS", 5);
+        string? configuredFile = Environment.GetEnvironmentVariable(AgentEnvironment.HEALTH_FILE);
+        string statusFile = string.IsNullOrWhiteSpace(configuredFile)
+            ? OperatingSystem.IsWindows()
+                ? @"C:\jenkins\agent-health.status"
+                : "/jenkins/agent-health.status"
+            : configuredFile;
+        int graceSeconds = ReadPositiveSeconds(AgentEnvironment.HEALTH_GRACE_SECONDS, DEFAULT_GRACE_SECONDS);
+        int staleSeconds = ReadPositiveSeconds(AgentEnvironment.HEALTH_STALE_SECONDS, DEFAULT_STALE_SECONDS);
+        _ = ReadPositiveSeconds(AgentEnvironment.HEALTH_INTERVAL_SECONDS, 10);
+        _ = ReadPositiveSeconds(AgentEnvironment.HEALTH_TIMEOUT_SECONDS, 5);
         return Run(
             statusFile,
             DateTimeOffset.UtcNow,
@@ -115,14 +117,7 @@ static class AgentHealth {
     }
 
     static int ReadPositiveSeconds(string name, int defaultValue) {
-        string? value = Environment.GetEnvironmentVariable(name);
-        if (string.IsNullOrWhiteSpace(value)) {
-            return defaultValue;
-        }
-        if (!int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int seconds) || seconds <= 0) {
-            throw new ConfigurationException($"environment variable {name} must be a positive integer");
-        }
-        return seconds;
+        return AgentEnvironment.ReadPositiveInteger(name, Environment.GetEnvironmentVariable(name)) ?? defaultValue;
     }
 
     static bool TryRead(string path, out IReadOnlyDictionary<string, string> values) {

@@ -24,6 +24,14 @@ sealed class IndexedEnvironmentTests {
         Assert.That(exception!.Message, Does.Contain(expectedName));
     }
 
+    [TestCase("")]
+    [TestCase("   ")]
+    public void LoadRejectsBlankIndex(string index) {
+        var exception = Assert.Throws<ConfigurationException>(() => IndexedEnvironment.Load(FILE, index, Open("")));
+
+        Assert.That(exception!.Message, Does.Contain("index is empty"));
+    }
+
     [Test]
     public void LoadSelectsExactMappingAndKeepsScalarText() {
         var values = IndexedEnvironment.Load(FILE, INDEX, Open("""

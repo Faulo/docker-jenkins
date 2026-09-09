@@ -26,7 +26,6 @@ ENV USER=root \
     HOME=/root \
     AGENT_WORKDIR=/jenkins \
     JENKINS_AGENT_WORKDIR=/jenkins \
-    JENKINS_WEB_SOCKET=true \
     JAVA_OPTS="-Dorg.jenkinsci.plugins.gitclient.Git.timeOut=60"
 WORKDIR /jenkins
 RUN mkdir -p /jenkins/workspace

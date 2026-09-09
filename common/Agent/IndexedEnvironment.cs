@@ -35,6 +35,9 @@ static class IndexedEnvironment {
         if (string.IsNullOrWhiteSpace(file)) {
             throw Error(file, index, "the file path is empty");
         }
+        if (string.IsNullOrWhiteSpace(index)) {
+            throw Error(file, index, "the index is empty");
+        }
 
         var yaml = new YamlStream();
         try {

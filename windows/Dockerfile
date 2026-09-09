@@ -29,7 +29,6 @@ ENV USER=ContainerAdministrator \
     HOME=C:/Users/ContainerAdministrator \
     AGENT_WORKDIR=C:/jenkins \
     JENKINS_AGENT_WORKDIR=C:/jenkins \
-    JENKINS_WEB_SOCKET=true \
     JAVA_OPTS="-Dorg.jenkinsci.plugins.gitclient.Git.timeOut=60"
 WORKDIR C:/jenkins
 RUN New-Item -ItemType Directory -Path C:\\jenkins\\workspace -Force | Out-Null

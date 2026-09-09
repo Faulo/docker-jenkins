@@ -7,9 +7,11 @@ static class Program {
         try {
             var indexedEnvironment = IndexedEnvironment.Load();
             IndexedEnvironment.Apply(indexedEnvironment);
-            return arguments.Length == 1 && string.Equals(arguments[0], "--health", StringComparison.Ordinal)
-                ? AgentHealth.Run()
-                : AgentProcess.Run(arguments, indexedEnvironment);
+            if (arguments.Length == 1 && string.Equals(arguments[0], "--health", StringComparison.Ordinal)) {
+                AgentEnvironment.Normalize(arguments);
+                return AgentHealth.Run();
+            }
+            return AgentProcess.Run(arguments, indexedEnvironment);
         } catch (ConfigurationException exception) {
             Console.Error.WriteLine("docker-jenkins-agent: " + exception.Message);
             return 1;

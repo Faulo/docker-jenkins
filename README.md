@@ -146,8 +146,11 @@ services:
     command: ["-url", "http://jenkins:8080", "-secret", "xxx", "-name", "yyy", "-webSocket"]
 ```
 
-Set `JENKINS_WEB_SOCKET: "true"` in the environment-based form when the agent
-should connect over WebSocket.
+`JENKINS_WEB_SOCKET` defaults to `true`. It accepts `1` or `true` to enable
+WebSocket and `0` or `false` to disable it. Matching is case-insensitive and
+ignores surrounding whitespace. An unset, empty, or whitespace-only value uses
+the default; every other value terminates startup with a configuration error.
+An explicit `-webSocket` command argument remains authoritative.
 
 ### Indexed agent configuration
 
@@ -155,7 +158,8 @@ For a global Docker Swarm service, mount a YAML document containing one agent
 environment per index and set both of these variables:
 
 - `JENKINS_CONFIG_FILE`: the explicit path to the mounted YAML document.
-- `JENKINS_CONFIG_INDEX`: the exact, case-sensitive top-level key to select.
+- `JENKINS_CONFIG_INDEX`: the exact, non-empty, case-sensitive top-level key to
+  select.
 
 For example:
 
@@ -240,7 +244,8 @@ round trip times out after 5 seconds. These values can be changed with
 `JENKINS_HEALTH_GRACE_SECONDS`, `JENKINS_HEALTH_STALE_SECONDS`,
 `JENKINS_HEALTH_INTERVAL_SECONDS`, and `JENKINS_HEALTH_TIMEOUT_SECONDS`.
 All must be positive integer seconds. `JENKINS_HEALTH_FILE` can override the
-platform-specific status-file path, primarily for diagnostics.
+platform-specific status-file path, primarily for diagnostics. Unset, empty,
+and whitespace-only health settings use their documented defaults.
 
 Docker reports successful probes during a reconnection grace period to avoid
 replacing an agent during an ordinary controller restart. Docker's visible

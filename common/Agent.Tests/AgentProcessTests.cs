@@ -11,9 +11,12 @@ sealed class AgentProcessTests {
         string name = $"AGENT_TEST_{Guid.NewGuid():N}";
         Environment.SetEnvironmentVariable(name, "from-process-environment");
         try {
-            var environment = AgentProcess.LinuxEnvironment(new Dictionary<string, string> {
-                [name] = "from-indexed-environment"
-            });
+            var environment = AgentProcess.LinuxEnvironment(
+                new Dictionary<string, string> {
+                    [name] = "from-indexed-environment"
+                },
+                []
+            );
 
             Assert.That(environment, Does.Contain($"{name}=from-indexed-environment"));
             Assert.That(environment, Does.Not.Contain($"{name}=from-process-environment"));
@@ -24,13 +27,32 @@ sealed class AgentProcessTests {
 
     [Test]
     public void LinuxEnvironmentPrependsHealthHookToJavaOptions() {
-        var environment = AgentProcess.LinuxEnvironment(new Dictionary<string, string> {
-            ["JENKINS_JAVA_OPTS"] = "-Xmx1g"
-        });
+        var environment = AgentProcess.LinuxEnvironment(
+            new Dictionary<string, string> {
+                ["JENKINS_JAVA_OPTS"] = "-Xmx1g"
+            },
+            []
+        );
 
         Assert.That(
             environment,
             Does.Contain("JENKINS_JAVA_OPTS=-javaagent:/jenkins/agent-health.jar -Xmx1g")
+        );
+    }
+
+    [TestCase(" TrUe ", "JENKINS_WEB_SOCKET=true")]
+    [TestCase("false", null)]
+    public void LinuxEnvironmentNormalizesIndexedWebSocket(string value, string? expected) {
+        var environment = AgentProcess.LinuxEnvironment(
+            new Dictionary<string, string> {
+                [AgentEnvironment.WEB_SOCKET] = value
+            },
+            []
+        );
+
+        Assert.That(
+            environment.SingleOrDefault(item => item.StartsWith($"{AgentEnvironment.WEB_SOCKET}=", StringComparison.Ordinal)),
+            Is.EqualTo(expected)
         );
     }
 

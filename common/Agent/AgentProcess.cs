@@ -16,9 +16,10 @@ static partial class AgentProcess {
 
     public static int Run(IReadOnlyList<string> arguments, IReadOnlyDictionary<string, string> indexedEnvironment) {
         if (OperatingSystem.IsLinux()) {
-            return Exec(LINUX_ENTRYPOINT, arguments, LinuxEnvironment(indexedEnvironment));
+            return Exec(LINUX_ENTRYPOINT, arguments, LinuxEnvironment(indexedEnvironment, arguments));
         }
         if (OperatingSystem.IsWindows()) {
+            AgentEnvironment.Normalize(arguments);
             var start = WindowsStartInfo(arguments);
             using var process = Process.Start(start)
                                 ?? throw new InvalidOperationException("failed to start the native Jenkins agent entrypoint");
@@ -58,13 +59,17 @@ static partial class AgentProcess {
         return prepared;
     }
 
-    internal static IReadOnlyList<string> LinuxEnvironment(IReadOnlyDictionary<string, string> indexedEnvironment) {
+    internal static IReadOnlyList<string> LinuxEnvironment(
+        IReadOnlyDictionary<string, string> indexedEnvironment,
+        IReadOnlyList<string> arguments
+    ) {
         var environment = Environment.GetEnvironmentVariables()
             .Cast<DictionaryEntry>()
             .ToDictionary(entry => (string)entry.Key, entry => (string)entry.Value!, StringComparer.Ordinal);
         foreach ((string name, string value) in indexedEnvironment) {
             environment[name] = value;
         }
+        AgentEnvironment.Normalize(arguments, environment);
         environment["JENKINS_JAVA_OPTS"] = HealthJavaOptions(LINUX_HEALTH_AGENT, environment);
         return environment.Select(entry => $"{entry.Key}={entry.Value}").ToArray();
     }
