@@ -30,6 +30,11 @@ def environmentProbe(variable) {
         : "-Cmd \"[Environment]::GetEnvironmentVariable('${variable}')\""
 }
 
+def withProjectEnvironment(Closure body) {
+    def values = readProperties file: '.env'
+    withEnv(values.collect { name, value -> "${name}=${value}" }, body)
+}
+
 def runContainer(arguments, environment = [], config = null, inheritEntrypoint = true) {
     def environmentArguments = environment.collect { "--env ${it}" }.join(' ')
     def entrypointArgument = inheritEntrypoint ? '' : '--entrypoint=""'
@@ -179,7 +184,7 @@ stage('Integration Tests') {
                     withEnv([
                         "DOCKER_NAMESPACE=${dockerNamespace}"
                     ]) {
-                        withEnvFile {
+                        withProjectEnvironment {
                             echo "Testing ${candidateImage()} on ${host}"
                             testImage()
                         }
