@@ -228,16 +228,34 @@ for the supported Jenkins connection modes and launch examples.
 
 Both variants use `/jenkins/agent --health` or
 `C:/jenkins/agent.exe --health` as their Docker health check. The command first
-validates and loads any indexed configuration, then asks the bundled Jenkins
-Remoting JAR to report its version. A successful probe confirms that the
-entrypoint, Java runtime, Remoting JAR, and mounted configuration are usable;
-it does not test controller connectivity.
+validates and loads any indexed configuration, then reads an atomic status
+record written from inside the running Jenkins Remoting JVM. The in-process
+monitor calls `Channel.syncIO()` every 10 seconds, so a healthy result confirms
+that the current Remoting channel completed a round trip to the controller. A
+probe never starts Java or opens its own controller connection.
+
+Startup and reconnection have a 120-second grace period. The last successful
+round trip and the status heartbeat may be at most 30 seconds old; an individual
+round trip times out after 5 seconds. These values can be changed with
+`JENKINS_HEALTH_GRACE_SECONDS`, `JENKINS_HEALTH_STALE_SECONDS`,
+`JENKINS_HEALTH_INTERVAL_SECONDS`, and `JENKINS_HEALTH_TIMEOUT_SECONDS`.
+All must be positive integer seconds. `JENKINS_HEALTH_FILE` can override the
+platform-specific status-file path, primarily for diagnostics.
+
+Docker reports successful probes during a reconnection grace period to avoid
+replacing an agent during an ordinary controller restart. Docker's visible
+state therefore remains `healthy` during that period once the initial
+`starting` state has ended. The probe becomes unhealthy when the grace period
+or freshness limit expires. If the Remoting process exits, the container exits
+as before.
 
 ## Runtime defaults and security
 
 - Linux processes run as `root`; Windows processes run as
   `ContainerAdministrator`.
-- `JAVA_OPTS` sets the Jenkins Git client operation timeout to 60 minutes.
+- `JAVA_OPTS` sets the Jenkins Git client operation timeout to 60 minutes. The
+  entrypoint prepends its required health-monitor Java agent to
+  `JENKINS_JAVA_OPTS`, while preserving configured Java options.
 - Git treats every repository path as a safe directory. This avoids ownership
   checks for host-mounted workspaces but removes that Git security boundary.
 - Linux installs Docker from Docker's signed APT repository. The Windows Unity

@@ -9,7 +9,9 @@ using System.Runtime.InteropServices;
 namespace Agent;
 
 static partial class AgentProcess {
+    const string LINUX_HEALTH_AGENT = "-javaagent:/jenkins/agent-health.jar";
     const string LINUX_ENTRYPOINT = "/usr/local/bin/jenkins-agent";
+    const string WINDOWS_HEALTH_AGENT = "\"-javaagent:C:/jenkins/agent-health.jar\"";
     const string WINDOWS_ENTRYPOINT = @"C:\ProgramData\Jenkins\jenkins-agent.ps1";
 
     public static int Run(IReadOnlyList<string> arguments, IReadOnlyDictionary<string, string> indexedEnvironment) {
@@ -27,16 +29,33 @@ static partial class AgentProcess {
     }
 
     internal static ProcessStartInfo WindowsStartInfo(IReadOnlyList<string> arguments) {
+        var preparedArguments = WindowsArguments(arguments);
         var start = new ProcessStartInfo {
             FileName = "powershell.exe",
             UseShellExecute = false
         };
+        start.Environment["JENKINS_JAVA_OPTS"] = HealthJavaOptions(WINDOWS_HEALTH_AGENT);
         start.ArgumentList.Add("-File");
         start.ArgumentList.Add(WINDOWS_ENTRYPOINT);
-        foreach (string argument in arguments) {
+        foreach (string argument in preparedArguments) {
             start.ArgumentList.Add(argument);
         }
         return start;
+    }
+
+    internal static IReadOnlyList<string> WindowsArguments(IReadOnlyList<string> arguments) {
+        string[] prepared = arguments.ToArray();
+        for (int index = 0; index < prepared.Length; index++) {
+            if (!string.Equals(prepared[index], "-JenkinsJavaOpts", StringComparison.OrdinalIgnoreCase)) {
+                continue;
+            }
+            if (index + 1 >= prepared.Length) {
+                throw new ConfigurationException("-JenkinsJavaOpts requires a value");
+            }
+            prepared[index + 1] = AddHealthJavaAgent(WINDOWS_HEALTH_AGENT, prepared[index + 1]);
+            index++;
+        }
+        return prepared;
     }
 
     internal static IReadOnlyList<string> LinuxEnvironment(IReadOnlyDictionary<string, string> indexedEnvironment) {
@@ -46,7 +65,35 @@ static partial class AgentProcess {
         foreach ((string name, string value) in indexedEnvironment) {
             environment[name] = value;
         }
+        environment["JENKINS_JAVA_OPTS"] = HealthJavaOptions(LINUX_HEALTH_AGENT, environment);
         return environment.Select(entry => $"{entry.Key}={entry.Value}").ToArray();
+    }
+
+    static string HealthJavaOptions(
+        string healthAgent,
+        IReadOnlyDictionary<string, string>? environment = null
+    ) {
+        string? jenkinsJavaOptions = ReadEnvironment("JENKINS_JAVA_OPTS", environment);
+        string? javaOptions = ReadEnvironment("JAVA_OPTS", environment);
+        string existing = !string.IsNullOrWhiteSpace(jenkinsJavaOptions)
+            ? jenkinsJavaOptions
+            : javaOptions ?? string.Empty;
+        return AddHealthJavaAgent(healthAgent, existing);
+    }
+
+    static string AddHealthJavaAgent(string healthAgent, string existing) {
+        return existing.Contains(healthAgent, StringComparison.Ordinal)
+            ? existing
+            : string.IsNullOrWhiteSpace(existing)
+                ? healthAgent
+                : $"{healthAgent} {existing}";
+    }
+
+    static string? ReadEnvironment(string name, IReadOnlyDictionary<string, string>? environment) {
+        if (environment is not null && environment.TryGetValue(name, out string? value)) {
+            return value;
+        }
+        return Environment.GetEnvironmentVariable(name);
     }
 
     static int Exec(string executable, IReadOnlyList<string> arguments, IReadOnlyList<string> environment) {

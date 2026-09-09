@@ -23,12 +23,28 @@ sealed class AgentProcessTests {
     }
 
     [Test]
+    public void LinuxEnvironmentPrependsHealthHookToJavaOptions() {
+        var environment = AgentProcess.LinuxEnvironment(new Dictionary<string, string> {
+            ["JENKINS_JAVA_OPTS"] = "-Xmx1g"
+        });
+
+        Assert.That(
+            environment,
+            Does.Contain("JENKINS_JAVA_OPTS=-javaagent:/jenkins/agent-health.jar -Xmx1g")
+        );
+    }
+
+    [Test]
     public void WindowsStartInfoPreservesArguments() {
         var start = AgentProcess.WindowsStartInfo(["-url", "https://jenkins.example/with space", "Mörkö"]);
 
         Assert.Multiple(() => {
             Assert.That(start.FileName, Is.EqualTo("powershell.exe"));
             Assert.That(start.UseShellExecute, Is.False);
+            Assert.That(
+                start.Environment["JENKINS_JAVA_OPTS"],
+                Does.StartWith("\"-javaagent:C:/jenkins/agent-health.jar\"")
+            );
             Assert.That(start.ArgumentList.ToArray(), Is.EqualTo(new[] {
                 "-File",
                 @"C:\ProgramData\Jenkins\jenkins-agent.ps1",
@@ -37,5 +53,17 @@ sealed class AgentProcessTests {
                 "Mörkö"
             }));
         });
+    }
+
+    [Test]
+    public void WindowsStartInfoPrependsHealthHookToExplicitJavaOptions() {
+        var start = AgentProcess.WindowsStartInfo(["-JenkinsJavaOpts", "-Xmx1g"]);
+
+        Assert.That(start.ArgumentList.ToArray(), Is.EqualTo(new[] {
+            "-File",
+            @"C:\ProgramData\Jenkins\jenkins-agent.ps1",
+            "-JenkinsJavaOpts",
+            "\"-javaagent:C:/jenkins/agent-health.jar\" -Xmx1g"
+        }));
     }
 }

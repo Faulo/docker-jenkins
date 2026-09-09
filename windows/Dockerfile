@@ -150,9 +150,29 @@ RUN $plasticPattern = '(?m)^Version:\s*(' + $env:PLASTIC_MAJOR + '\.\S+)\s*$'; \
     if ($installedVersion -notmatch ('^' + [regex]::Escape($plasticVersion) + '(?:\s|$)')) { throw ('Unexpected Unity Version Control version: ' + $installedVersion) }; \
     $installedVersion
 
+# The PowerShell launcher reparses this value and requires each Java option to be quoted.
+ENV JAVA_OPTS="'-Dorg.jenkinsci.plugins.gitclient.Git.timeOut=60'"
+
+COPY common/AgentHealthHook/AgentHealthHook.java C:/agent-health-source/AgentHealthHook.java
+RUN New-Item -ItemType Directory -Path C:/agent-health-source/classes -Force | Out-Null; \
+    javac.exe -cp C:/ProgramData/Jenkins/agent.jar \
+      -d C:/agent-health-source/classes C:/agent-health-source/AgentHealthHook.java; \
+    if ($LASTEXITCODE -ne 0) { throw 'Failed to compile Jenkins Remoting health hook' }; \
+    [IO.File]::WriteAllText( \
+      'C:/agent-health-source/manifest.mf', \
+      'Premain-Class: agent.health.AgentHealthHook' + [Environment]::NewLine + [Environment]::NewLine, \
+      [Text.Encoding]::ASCII \
+    ); \
+    jar.exe cfm C:/jenkins/agent-health.jar C:/agent-health-source/manifest.mf \
+      -C C:/agent-health-source/classes .; \
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath C:/jenkins/agent-health.jar)) { \
+        throw 'Failed to package Jenkins Remoting health hook' \
+    }; \
+    Remove-Item -LiteralPath C:/agent-health-source -Recurse -Force
+
 COPY --from=agent-build C:/out/agent.exe C:/jenkins/agent.exe
-RUN C:/jenkins/agent.exe --health; \
-    if ($LASTEXITCODE -ne 0) { throw 'Jenkins agent health check failed' }
+RUN java.exe -jar C:/ProgramData/Jenkins/agent.jar -version; \
+    if ($LASTEXITCODE -ne 0) { throw 'Jenkins Remoting smoke check failed' }
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD ["C:/jenkins/agent.exe", "--health"]

@@ -101,8 +101,18 @@ RUN echo 'deb [trusted=yes allow-insecure=yes] https://www.plasticscm.com/plasti
     rm -rf /var/lib/apt/lists/* && \
     cm version | grep -E "^${PLASTIC_MAJOR}\."
 
+COPY common/AgentHealthHook/AgentHealthHook.java /tmp/agent-health/AgentHealthHook.java
+RUN mkdir -p /tmp/agent-health/classes && \
+    javac -cp /usr/share/jenkins/agent.jar \
+      -d /tmp/agent-health/classes /tmp/agent-health/AgentHealthHook.java && \
+    printf 'Premain-Class: agent.health.AgentHealthHook\n\n' > /tmp/agent-health/manifest.mf && \
+    jar cfm /jenkins/agent-health.jar /tmp/agent-health/manifest.mf \
+      -C /tmp/agent-health/classes . && \
+    test -s /jenkins/agent-health.jar && \
+    rm -rf /tmp/agent-health
+
 COPY --from=agent-build --chmod=755 /out/agent /jenkins/agent
-RUN /jenkins/agent --health
+RUN java -jar /usr/share/jenkins/agent.jar -version
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD ["/jenkins/agent", "--health"]
