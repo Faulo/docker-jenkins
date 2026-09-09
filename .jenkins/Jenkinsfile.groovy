@@ -238,9 +238,34 @@ def testControllerAgent() {
     assertValue(absence.exitCode, '0', 'runtime image excludes custom Remoting health hook')
 }
 
+def testLiveHealth() {
+    def environmentArguments = [
+        "JENKINS_URL=${env.JENKINS_URL}",
+        'JENKINS_SECRET=not-a-secret',
+        'JENKINS_AGENT_NAME=health-probe',
+        'JENKINS_WEB_SOCKET=true'
+    ].collect { "--env \"${it}\"" }.join(' ')
+    def containerId = execStdout("docker create ${environmentArguments} ${candidateImage()}").trim()
+    try {
+        exec "docker start ${containerId}"
+        def healthCommand = isUnix()
+            ? "/jenkins/agent --health"
+            : "C:/jenkins/agent.exe --health"
+        def exitCode = '1'
+        for (int attempt = 0; attempt < 10 && exitCode != '0'; attempt++) {
+            sleep time: 1, unit: 'SECONDS'
+            exitCode = execStatus("docker exec ${containerId} ${healthCommand}").toString()
+        }
+        assertValue(exitCode, '0', 'health with managed agent exit code')
+    } finally {
+        exec "docker rm --force --volumes ${containerId}"
+    }
+}
+
 def testImage() {
     testEntrypoint()
     testControllerAgent()
+    testLiveHealth()
     def scriptSuffix = isUnix() ? '' : '.cmd'
     def probes = [
         [command: 'docker --version', expected: 'Docker version 29.'],
