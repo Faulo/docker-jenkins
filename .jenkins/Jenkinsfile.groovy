@@ -270,7 +270,7 @@ properties([
     disableResume()
 ])
 
-def hosts = ['Dende', 'Garl']
+def hosts = ['Garl']
 def dockerNamespace = params.DOCKER_NAMESPACE ?: 'faulo'
 
 stage('Integration Tests') {
