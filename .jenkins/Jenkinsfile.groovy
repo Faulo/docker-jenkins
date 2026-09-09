@@ -125,8 +125,8 @@ selected:
     assertContains(missingPair.logs, 'JENKINS_CONFIG_INDEX', 'missing configuration pair error')
     assertNotContains(missingPair.logs, 'highly-sensitive-value', 'missing configuration pair error')
 
-    def health = runContainer('--health')
-    assertValue(health.exitCode, '0', 'health exit code')
+    def healthWithoutAgent = runContainer('--health')
+    assertValue(healthWithoutAgent.exitCode, '1', 'health without managed agent exit code')
 }
 
 def testImage() {
