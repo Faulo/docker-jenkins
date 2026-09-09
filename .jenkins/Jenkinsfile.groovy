@@ -37,6 +37,12 @@ def execStdout(command) {
         : bat(script: "@${command}", returnStdout: true)
 }
 
+def execStatus(command) {
+    return isUnix()
+        ? sh(script: command, returnStatus: true)
+        : bat(script: command, returnStatus: true)
+}
+
 def candidateImage() {
     return "$DOCKER_NAMESPACE/$DOCKER_IMAGE"
 }
@@ -228,11 +234,39 @@ def testHealthHook() {
     assertContains(result.logs, 'Channel.callAsync', 'health hook control heartbeat')
     assertContains(result.logs, 'PingThread$Ping', 'health hook Remoting ping primitive')
     assertNotContains(result.logs, 'Channel.syncIO', 'health hook I/O-drain barrier')
+    assertNotContains(result.logs, 'Executors.newSingleThreadExecutor', 'health hook heartbeat queue')
+}
+
+def healthAcceptanceDockerfile() {
+    if (isUnix()) {
+        return '''FROM IMAGE_TO_TEST
+COPY common/AgentHealthHook/AgentHealthHookAcceptance.java /tmp/agent-health-test/AgentHealthHookAcceptance.java
+RUN mkdir -p /tmp/agent-health-test/classes && javac -cp /usr/share/jenkins/agent.jar -d /tmp/agent-health-test/classes /tmp/agent-health-test/AgentHealthHookAcceptance.java && JENKINS_HEALTH_FILE=/tmp/agent-health-test.status JENKINS_HEALTH_INTERVAL_SECONDS=1 JENKINS_HEALTH_TIMEOUT_SECONDS=1 java -javaagent:/jenkins/agent-health.jar -cp /usr/share/jenkins/agent.jar:/tmp/agent-health-test/classes agent.health.AgentHealthHookAcceptance
+'''.replace('IMAGE_TO_TEST', candidateImage())
+    }
+    return '''# escape=`
+FROM IMAGE_TO_TEST
+SHELL ["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell", "-NonInteractive", "-NoProfile", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+COPY common/AgentHealthHook/AgentHealthHookAcceptance.java C:/agent-health-test/AgentHealthHookAcceptance.java
+RUN New-Item -ItemType Directory -Path C:/agent-health-test/classes -Force | Out-Null; javac.exe -cp C:/ProgramData/Jenkins/agent.jar -d C:/agent-health-test/classes C:/agent-health-test/AgentHealthHookAcceptance.java; if ($LASTEXITCODE -ne 0) { throw 'Failed to compile health acceptance test' }; $env:JENKINS_HEALTH_FILE = 'C:/agent-health-test.status'; $env:JENKINS_HEALTH_INTERVAL_SECONDS = '1'; $env:JENKINS_HEALTH_TIMEOUT_SECONDS = '1'; java.exe -javaagent:C:/jenkins/agent-health.jar -cp 'C:/ProgramData/Jenkins/agent.jar;C:/agent-health-test/classes' agent.health.AgentHealthHookAcceptance; if ($LASTEXITCODE -ne 0) { throw 'Health acceptance test failed' }
+'''.replace('IMAGE_TO_TEST', candidateImage())
+}
+
+def testHealthUnderLoad() {
+    def platform = isUnix() ? 'linux' : 'windows'
+    def testImage = "tmp/jenkins-agent-health-test:${env.BUILD_NUMBER}-${platform}"
+    writeFile file: 'Dockerfile.health-test', text: healthAcceptanceDockerfile()
+    try {
+        exec "docker build --tag ${testImage} --file Dockerfile.health-test ."
+    } finally {
+        execStatus "docker image rm --force ${testImage}"
+    }
 }
 
 def testImage() {
     testEntrypoint()
     testHealthHook()
+    testHealthUnderLoad()
     def scriptSuffix = isUnix() ? '' : '.cmd'
     def probes = [
         [command: 'docker --version', expected: 'Docker version 29.'],
