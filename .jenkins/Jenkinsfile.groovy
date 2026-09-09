@@ -209,8 +209,30 @@ selected:
     assertValue(healthWithoutAgent.exitCode, '1', 'health without managed agent exit code')
 }
 
+def testHealthHook() {
+    def classPath = isUnix()
+        ? '/jenkins/agent-health.jar:/usr/share/jenkins/agent.jar'
+        : 'C:/jenkins/agent-health.jar;C:/ProgramData/Jenkins/agent.jar'
+    def monitorClass = isUnix()
+        ? "'agent.health.AgentHealthHook\$Monitor'"
+        : '"agent.health.AgentHealthHook$Monitor"'
+    def javap = isUnix() ? 'javap' : 'javap.exe'
+    def result = runContainer(
+        "${javap} -c -p -classpath \"${classPath}\" ${monitorClass}",
+        [],
+        null,
+        false
+    )
+
+    assertValue(result.exitCode, '0', 'health hook bytecode inspection exit code')
+    assertContains(result.logs, 'Channel.callAsync', 'health hook control heartbeat')
+    assertContains(result.logs, 'PingThread$Ping', 'health hook Remoting ping primitive')
+    assertNotContains(result.logs, 'Channel.syncIO', 'health hook I/O-drain barrier')
+}
+
 def testImage() {
     testEntrypoint()
+    testHealthHook()
     def scriptSuffix = isUnix() ? '' : '.cmd'
     def probes = [
         [command: 'docker --version', expected: 'Docker version 29.'],
