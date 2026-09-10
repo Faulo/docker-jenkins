@@ -1,13 +1,15 @@
-**
-!Directory.Build.props
-!common/
-!common/Agent/
-!common/Agent/**
-common/Agent/bin/
-common/Agent/bin/**
-common/Agent/obj/
-common/Agent/obj/**
-!linux/
-!linux/Dockerfile
-!windows/
-!windows/Dockerfile
+# == Windows ==
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# == .NET ==
+**/bin/
+**/obj/
+
+# == DevOps ==
+.git/
+.github/
+.jenkins/
+.idea/
