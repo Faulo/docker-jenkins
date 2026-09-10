@@ -58,7 +58,7 @@ def environmentProbe(variable) {
 }
 
 def javaProbe() {
-    return isUnix() ? '/bin/echo' : 'C:/Program Files/Git/usr/bin/echo.exe'
+    return isUnix() ? '/bin/echo' : 'C:/jenkins-java-probe.exe'
 }
 
 def withProjectEnvironment(Closure body) {
@@ -71,6 +71,9 @@ def runContainer(arguments, environment = [], config = null, inheritEntrypoint =
     def entrypointArgument = inheritEntrypoint ? '' : '--entrypoint=""'
     def containerId = execStdout("docker create ${entrypointArgument} ${environmentArguments} ${candidateImage()} ${arguments}").trim()
     try {
+        if (!isUnix() && environment.any { it.startsWith('JENKINS_JAVA_BIN=') }) {
+            exec "docker cp C:/mingit/usr/bin/echo.exe ${containerId}:${javaProbe()}"
+        }
         if (config != null) {
             writeFile file: 'jenkins-agent-test.yml', text: config
             exec "docker cp jenkins-agent-test.yml ${containerId}:${configPath()}"
