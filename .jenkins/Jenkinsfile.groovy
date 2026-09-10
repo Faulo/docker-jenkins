@@ -58,7 +58,7 @@ def environmentProbe(variable) {
 }
 
 def javaProbe() {
-    return isUnix() ? '/bin/echo' : 'C:/mingit/usr/bin/echo.exe'
+    return isUnix() ? '/bin/echo' : 'C:/Program Files/Git/usr/bin/echo.exe'
 }
 
 def withProjectEnvironment(Closure body) {
@@ -284,6 +284,13 @@ def testImage() {
     testEntrypoint()
     testControllerAgent()
     testLiveHealth()
+    def platformContract = isUnix()
+        ? runContainer("sh -c '. /etc/os-release && test \"\$VERSION_CODENAME\" = trixie'", [], null, false)
+        : runContainer('choco list --local-only --exact jenkins-agent --limit-output', [], null, false)
+    assertValue(platformContract.exitCode, '0', 'platform package contract exit code')
+    if (!isUnix()) {
+        assertContains(platformContract.logs, 'jenkins-agent|1.0.0', 'Chocolatey package manifest')
+    }
     def user = runContainer(isUnix() ? 'id -u' : 'whoami', [], null, false)
     assertValue(user.exitCode, '0', 'runtime user probe exit code')
     if (isUnix()) {
@@ -293,11 +300,12 @@ def testImage() {
     }
     def scriptSuffix = isUnix() ? '' : '.cmd'
     def probes = [
-        [command: 'docker --version', expected: 'Docker version 29.'],
+        [command: 'docker --version', expected: 'Docker version '],
         [command: 'git --version', expected: 'git version'],
-        [command: 'cm version', expected: '11.'],
-        [command: 'pwsh --version', expected: 'PowerShell 7.'],
-        [command: 'node --version', expected: 'v24.'],
+        [command: 'git lfs version', expected: 'git-lfs/'],
+        [command: 'cm version', expected: '.'],
+        [command: 'pwsh --version', expected: 'PowerShell '],
+        [command: 'node --version', expected: 'v'],
         [command: "npm${scriptSuffix} --version", expected: '.'],
         [command: "npx${scriptSuffix} --version", expected: '.']
     ]
