@@ -1,18 +1,18 @@
-FROM mcr.microsoft.com/dotnet/sdk:9.0-bookworm-slim AS agent-build
+FROM mcr.microsoft.com/dotnet/sdk:9.0-bookworm-slim AS build
 
-WORKDIR /source
+WORKDIR /solution
 
-COPY Directory.Build.props .
-COPY common/Agent/ .
+COPY . .
 
-RUN dotnet publish Agent.csproj \
+RUN dotnet publish docker-jenkins-agent.sln \
         --configuration Release \
         --runtime linux-x64 \
         --self-contained true \
         --property:PublishSingleFile=true \
-        --output /out
+        --property:UseAppHost=true \
+        --property:DebugType=None
 
-FROM jenkins/inbound-agent:trixie-jdk21
+FROM jenkins/agent:trixie-jdk21
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG DOCKER_MAJOR=29
@@ -28,7 +28,8 @@ ENV USER=root \
     JENKINS_AGENT_WORKDIR=/jenkins \
     JAVA_OPTS="-Dorg.jenkinsci.plugins.gitclient.Git.timeOut=60"
 WORKDIR /jenkins
-RUN mkdir -p /jenkins/workspace
+RUN mkdir -p /jenkins/workspace && \
+    java -version
 VOLUME ["/jenkins/workspace"]
 
 # Git
@@ -56,7 +57,8 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends libicu76 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
-    powershell_version="$(grep -oE "\"tag_name\"[[:space:]]*:[[:space:]]*\"v${POWERSHELL_MAJOR}\\.[0-9]+\\.[0-9]+\"" /tmp/powershell-releases.json | sed -n '1p' | cut -d '"' -f 4 | tr -d v)" && \
+    powershell_version="$(grep -oE "\"tag_name\"[[:space:]]*:[[:space:]]*\"v${POWERSHELL_MAJOR}\\.[0-9]+\\.[0-9]+\"" /tmp/powershell-releases.json | \
+        cut -d '"' -f 4 | tr -d v | sort -V | tail -n 1)" && \
     test -n "$powershell_version" && \
     powershell_archive="powershell-${powershell_version}-linux-x64.tar.gz" && \
     powershell_url="https://github.com/PowerShell/PowerShell/releases/download/v${powershell_version}" && \
@@ -102,18 +104,7 @@ RUN echo 'deb [trusted=yes allow-insecure=yes] https://www.plasticscm.com/plasti
     rm -rf /var/lib/apt/lists/* && \
     cm version | grep -E "^${PLASTIC_MAJOR}\."
 
-COPY common/AgentHealthHook/AgentHealthHook.java /tmp/agent-health/AgentHealthHook.java
-RUN mkdir -p /tmp/agent-health/classes && \
-    javac -cp /usr/share/jenkins/agent.jar \
-      -d /tmp/agent-health/classes /tmp/agent-health/AgentHealthHook.java && \
-    printf 'Premain-Class: agent.health.AgentHealthHook\n\n' > /tmp/agent-health/manifest.mf && \
-    jar cfm /jenkins/agent-health.jar /tmp/agent-health/manifest.mf \
-      -C /tmp/agent-health/classes . && \
-    test -s /jenkins/agent-health.jar && \
-    rm -rf /tmp/agent-health
-
-COPY --from=agent-build --chmod=755 /out/agent /jenkins/agent
-RUN java -jar /usr/share/jenkins/agent.jar -version
+COPY --from=build --chmod=755 /solution/common/Agent/bin/Release/net9.0/linux-x64/publish/agent /jenkins/agent
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD ["/jenkins/agent", "--health"]

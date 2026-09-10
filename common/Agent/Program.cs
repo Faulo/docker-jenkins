@@ -11,7 +11,7 @@ static class Program {
                 AgentEnvironment.Normalize(arguments);
                 return AgentHealth.Run();
             }
-            return AgentProcess.Run(arguments, indexedEnvironment);
+            return AgentProcess.Run(arguments);
         } catch (ConfigurationException exception) {
             Console.Error.WriteLine("docker-jenkins-agent: " + exception.Message);
             return 1;

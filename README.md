@@ -2,8 +2,15 @@
 
 This repository builds Linux and Windows variants of one Docker image for
 Jenkins agents. Both variants extend the official
-[`jenkins/inbound-agent`](https://hub.docker.com/r/jenkins/inbound-agent)
-image and use Java 21.
+[`jenkins/agent`](https://hub.docker.com/r/jenkins/agent) image and use Java
+21. The C# entrypoint launches Jenkins Remoting directly; the image does not
+include or call the inbound-agent shell or PowerShell launchers.
+
+At each Jenkins-agent startup, the entrypoint downloads `jnlpJars/agent.jar`
+from `JENKINS_URL` to the directory containing `agent` or `agent.exe`. This
+keeps Remoting aligned with the controller instead of the image's build date.
+The download is validated and installed atomically. Startup fails if the
+controller URL is missing, invalid, or does not return a JAR.
 
 The image is intended for Jenkins jobs that need Git, Unity Version Control
 (the `cm` command), Node.js, PowerShell, and access to a Docker daemon supplied
@@ -15,15 +22,15 @@ Docker client; it does not contain or run a Docker daemon.
 
 | Variant | Dockerfile | Base image | Docker context |
 | --- | --- | --- | --- |
-| Linux | `linux/Dockerfile` | `jenkins/inbound-agent:trixie-jdk21` | `linux` |
-| Windows LTSC 2019 | `windows/Dockerfile` | `jenkins/inbound-agent:jdk21-windowsservercore-ltsc2019` | `windows` |
-| Windows LTSC 2022 | `windows/Dockerfile` | `jenkins/inbound-agent:jdk21-windowsservercore-ltsc2022` | `windows` |
+| Linux | `linux/Dockerfile` | `jenkins/agent:trixie-jdk21` | `linux` |
+| Windows LTSC 2019 | `windows/Dockerfile` | `jenkins/agent:jdk21-windowsservercore-ltsc2019` | `windows` |
+| Windows LTSC 2022 | `windows/Dockerfile` | `jenkins/agent:jdk21-windowsservercore-ltsc2022` | `windows` |
 
 Both variants provide the same agent-level capabilities:
 
 | Capability | Linux | Windows |
 | --- | --- | --- |
-| Jenkins inbound-agent runtime | Yes | Yes |
+| Jenkins Remoting runtime | Downloaded at startup | Downloaded at startup |
 | Java 21 | Yes | Yes |
 | Git and Git LFS | Yes | Yes |
 | Unity Version Control 11 CLI (`cm`) | Core client package | Client installer |
@@ -136,13 +143,16 @@ services:
       JENKINS_AGENT_NAME: yyy
 ```
 
-The inherited `jenkins/inbound-agent` entrypoint also continues to accept
-connection arguments through `command`:
+The C# entrypoint also accepts Remoting connection arguments through `command`.
+`JENKINS_URL` must still be present in the environment because it identifies
+the controller that supplies `jnlpJars/agent.jar`:
 
 ```yaml
 services:
   agent:
     image: faulo/jenkins-agent:latest
+    environment:
+      JENKINS_URL: http://jenkins:8080/
     command: ["-url", "http://jenkins:8080", "-secret", "xxx", "-name", "yyy", "-webSocket"]
 ```
 
@@ -151,6 +161,17 @@ WebSocket and `0` or `false` to disable it. Matching is case-insensitive and
 ignores surrounding whitespace. An unset, empty, or whitespace-only value uses
 the default; every other value terminates startup with a configuration error.
 An explicit `-webSocket` command argument remains authoritative.
+
+The entrypoint maps the launcher environment used by the official Jenkins
+images to Remoting arguments: `JENKINS_SECRET`, `JENKINS_AGENT_NAME` (and the
+legacy `JENKINS_NAME` alias), `JENKINS_TUNNEL`, `JENKINS_URL`,
+`JENKINS_AGENT_WORKDIR`, `JENKINS_WEB_SOCKET`, `JENKINS_DIRECT_CONNECTION`,
+`JENKINS_INSTANCE_IDENTITY`, and `JENKINS_PROTOCOLS`. Explicit command
+arguments take precedence and are not duplicated. `JENKINS_JAVA_BIN` selects
+Java; otherwise `JAVA_HOME` and then the platform `PATH` are used.
+`JENKINS_JAVA_OPTS` falls back to `JAVA_OPTS`, and `REMOTING_OPTS` supplies
+additional Remoting arguments. Quoted option values are kept as single
+arguments on both platforms.
 
 ### Indexed agent configuration
 
@@ -218,49 +239,34 @@ Configure the Jenkins node's **Remote root directory** to match the image:
 | Linux | `/jenkins` | `/jenkins/workspace` |
 | Windows | `C:\jenkins` | `C:\jenkins\workspace` |
 
-Both `AGENT_WORKDIR` image metadata and the inbound launcher's
-`JENKINS_AGENT_WORKDIR` are set to the corresponding remote root. The
-`workspace` directory is deliberately a child of that root and is declared as
-a Docker volume in each image. It is the path to mount when workspace
-persistence or host access is required.
+Both `AGENT_WORKDIR` and `JENKINS_AGENT_WORKDIR` are set to the corresponding
+remote root. The `workspace` directory is deliberately a child of that root
+and is declared as a Docker volume in each image. It is the path to mount when
+workspace persistence or host access is required.
 
 Refer to the
-[`jenkins/inbound-agent` documentation](https://github.com/jenkinsci/docker-agent)
-for the supported Jenkins connection modes and launch examples.
+[`jenkins/agent` documentation](https://github.com/jenkinsci/docker-agents)
+for the underlying Java and tool image.
 
 ## Health check
 
 Both variants use `/jenkins/agent --health` or
-`C:/jenkins/agent.exe --health` as their Docker health check. The command first
-validates and loads any indexed configuration, then reads an atomic status
-record written from inside the running Jenkins Remoting JVM. The in-process
-monitor calls `Channel.syncIO()` every 10 seconds, so a healthy result confirms
-that the current Remoting channel completed a round trip to the controller. A
-probe never starts Java or opens its own controller connection.
+`C:/jenkins/agent.exe --health` as their Docker health check. The C# entrypoint
+owns a named operating-system mutex while the Java Remoting process is running,
+and the probe checks that ownership. No PID, status file, Java agent, or
+additional controller connection is involved.
 
-Startup and reconnection have a 120-second grace period. The last successful
-round trip and the status heartbeat may be at most 30 seconds old; an individual
-round trip times out after 5 seconds. These values can be changed with
-`JENKINS_HEALTH_GRACE_SECONDS`, `JENKINS_HEALTH_STALE_SECONDS`,
-`JENKINS_HEALTH_INTERVAL_SECONDS`, and `JENKINS_HEALTH_TIMEOUT_SECONDS`.
-All must be positive integer seconds. `JENKINS_HEALTH_FILE` can override the
-platform-specific status-file path, primarily for diagnostics. Unset, empty,
-and whitespace-only health settings use their documented defaults.
-
-Docker reports successful probes during a reconnection grace period to avoid
-replacing an agent during an ordinary controller restart. Docker's visible
-state therefore remains `healthy` during that period once the initial
-`starting` state has ended. The probe becomes unhealthy when the grace period
-or freshness limit expires. If the Remoting process exits, the container exits
-as before.
+The probe deliberately reports process liveness rather than inventing a second
+Remoting health protocol. Jenkins Remoting performs its normal channel pings,
+disconnect, and reconnection behavior. If the managed Java process exits, the
+C# entrypoint returns its exit code, releases the mutex, and the container
+exits.
 
 ## Runtime defaults and security
 
 - Linux processes run as `root`; Windows processes run as
   `ContainerAdministrator`.
-- `JAVA_OPTS` sets the Jenkins Git client operation timeout to 60 minutes. The
-  entrypoint prepends its required health-monitor Java agent to
-  `JENKINS_JAVA_OPTS`, while preserving configured Java options.
+- `JAVA_OPTS` sets the Jenkins Git client operation timeout to 60 minutes.
 - Git treats every repository path as a safe directory. This avoids ownership
   checks for host-mounted workspaces but removes that Git security boundary.
 - Linux installs Docker from Docker's signed APT repository. The Windows Unity

@@ -1,20 +1,22 @@
 ARG OS_BASE=ltsc2019
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0-windowsservercore-${OS_BASE} AS agent-build
+FROM mcr.microsoft.com/dotnet/sdk:9.0-nanoserver-1809 AS build
 
-WORKDIR C:/source
+WORKDIR C:/solution
 
-COPY Directory.Build.props .
-COPY common/Agent/ .
+ENV NUGET_PACKAGES=C:/nuget/packages
 
-RUN dotnet publish Agent.csproj \
+COPY . .
+
+RUN dotnet publish docker-jenkins-agent.sln \
         --configuration Release \
         --runtime win-x64 \
         --self-contained true \
         --property:PublishSingleFile=true \
-        --output C:/out
+        --property:UseAppHost=true \
+        --property:DebugType=None
 
-FROM jenkins/inbound-agent:jdk21-windowsservercore-${OS_BASE}
+FROM jenkins/agent:jdk21-windowsservercore-${OS_BASE}
 
 SHELL ["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell", "-NonInteractive", "-NoProfile", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 
@@ -31,7 +33,9 @@ ENV USER=ContainerAdministrator \
     JENKINS_AGENT_WORKDIR=C:/jenkins \
     JAVA_OPTS="-Dorg.jenkinsci.plugins.gitclient.Git.timeOut=60"
 WORKDIR C:/jenkins
-RUN New-Item -ItemType Directory -Path C:\\jenkins\\workspace -Force | Out-Null
+RUN New-Item -ItemType Directory -Path C:\\jenkins\\workspace -Force | Out-Null; \
+    java.exe -version; \
+    if ($LASTEXITCODE -ne 0) { throw 'Java smoke check failed' }
 VOLUME ["C:/jenkins/workspace"]
 
 # Git
@@ -66,11 +70,8 @@ RUN $releases = Get-Content C:/powershell-releases.json -Raw | ConvertFrom-Json;
     Remove-Item -LiteralPath $archive,C:/powershell-hashes,C:/powershell-releases.json; \
     $machinePath = [Environment]::GetEnvironmentVariable('Path', 'Machine'); \
     [Environment]::SetEnvironmentVariable('Path', ($destination + ';' + $machinePath), 'Machine'); \
-    $pwsh = Join-Path $destination pwsh.exe; \
-    $installedVersion = & $pwsh -NoLogo -NoProfile -Command '$PSVersionTable.PSVersion.ToString()'; \
-    if ($LASTEXITCODE -ne 0 -or $installedVersion -ne $powershellVersion) { throw ('Unexpected PowerShell version: ' + $installedVersion) }; \
-    $installedVersion
-RUN pwsh.exe -NoLogo -NoProfile -Command \
+    $env:Path = $destination + ';' + $env:Path; \
+    pwsh -NoLogo -NoProfile -Command \
         'if ($PSVersionTable.PSVersion.Major -ne [int]$env:POWERSHELL_MAJOR) { exit 1 }'; \
     if ($LASTEXITCODE -ne 0) { throw 'PowerShell smoke check failed' }
 
@@ -149,29 +150,7 @@ RUN $plasticPattern = '(?m)^Version:\s*(' + $env:PLASTIC_MAJOR + '\.\S+)\s*$'; \
     if ($installedVersion -notmatch ('^' + [regex]::Escape($plasticVersion) + '(?:\s|$)')) { throw ('Unexpected Unity Version Control version: ' + $installedVersion) }; \
     $installedVersion
 
-# The PowerShell launcher reparses this value and requires each Java option to be quoted.
-ENV JAVA_OPTS="'-Dorg.jenkinsci.plugins.gitclient.Git.timeOut=60'"
-
-COPY common/AgentHealthHook/AgentHealthHook.java C:/agent-health-source/AgentHealthHook.java
-RUN New-Item -ItemType Directory -Path C:/agent-health-source/classes -Force | Out-Null; \
-    javac.exe -cp C:/ProgramData/Jenkins/agent.jar \
-      -d C:/agent-health-source/classes C:/agent-health-source/AgentHealthHook.java; \
-    if ($LASTEXITCODE -ne 0) { throw 'Failed to compile Jenkins Remoting health hook' }; \
-    [IO.File]::WriteAllText( \
-      'C:/agent-health-source/manifest.mf', \
-      'Premain-Class: agent.health.AgentHealthHook' + [Environment]::NewLine + [Environment]::NewLine, \
-      [Text.Encoding]::ASCII \
-    ); \
-    jar.exe cfm C:/jenkins/agent-health.jar C:/agent-health-source/manifest.mf \
-      -C C:/agent-health-source/classes .; \
-    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath C:/jenkins/agent-health.jar)) { \
-        throw 'Failed to package Jenkins Remoting health hook' \
-    }; \
-    Remove-Item -LiteralPath C:/agent-health-source -Recurse -Force
-
-COPY --from=agent-build C:/out/agent.exe C:/jenkins/agent.exe
-RUN java.exe -jar C:/ProgramData/Jenkins/agent.jar -version; \
-    if ($LASTEXITCODE -ne 0) { throw 'Jenkins Remoting smoke check failed' }
+COPY --from=build C:/solution/common/Agent/bin/Release/net9.0/win-x64/publish/agent.exe C:/jenkins/agent.exe
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD ["C:/jenkins/agent.exe", "--health"]
