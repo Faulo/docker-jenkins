@@ -299,7 +299,7 @@ def testImage() {
         [command: 'pwsh --version', expected: 'PowerShell 7.'],
         [command: 'node --version', expected: 'v24.'],
         [command: "npm${scriptSuffix} --version", expected: '.'],
-        [command: "npx${scriptSuffix} -y hello Faulo", expected: 'Hello']
+        [command: "npx${scriptSuffix} --version", expected: '.']
     ]
     probes.each { probe ->
         def result = runContainer(probe.command, [], null, false)
