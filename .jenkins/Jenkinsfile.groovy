@@ -252,18 +252,18 @@ def testControllerAgent() {
         }
     }
 
-    def absenceCommand = isUnix()
-        ? "sh -c 'test ! -e /jenkins/agent-health.jar && test ! -e /usr/local/bin/jenkins-agent'"
-        : "powershell.exe -NoProfile -Command \"if ((Test-Path -LiteralPath C:/jenkins/agent-health.jar) -or (Test-Path -LiteralPath C:/ProgramData/Jenkins/jenkins-agent.ps1)) { exit 1 }\""
-    def absence = runContainer(absenceCommand, [], null, false)
-    assertValue(absence.exitCode, '0', 'runtime image excludes Java hook and upstream launcher')
+    def runtimeCommand = isUnix()
+        ? "sh -c 'test -s /jenkins/agent-health.jar && test ! -e /usr/local/bin/jenkins-agent'"
+        : "powershell.exe -NoProfile -Command \"if (-not (Test-Path -LiteralPath C:/jenkins/agent-health.jar) -or (Test-Path -LiteralPath C:/ProgramData/Jenkins/jenkins-agent.ps1)) { exit 1 }\""
+    def runtime = runContainer(runtimeCommand, [], null, false)
+    assertValue(runtime.exitCode, '0', 'runtime image contains health hook without upstream launcher')
 }
 
 def testLiveHealth() {
     def environmentArguments = [
         "JENKINS_URL=${env.JENKINS_URL}",
         'JENKINS_SECRET=not-a-secret',
-        'JENKINS_AGENT_NAME=health-probe',
+        'JENKINS_AGENT_NAME=Mörkö',
         'JENKINS_WEB_SOCKET=true'
     ].collect { "--env \"${it}\"" }.join(' ')
     def containerId = execStdout("docker create ${environmentArguments} ${candidateImage()}").trim()
@@ -272,22 +272,80 @@ def testLiveHealth() {
         def healthCommand = isUnix()
             ? "/jenkins/agent --health"
             : "C:/jenkins/agent.exe --health"
-        def exitCode = '1'
-        for (int attempt = 0; attempt < 10 && exitCode != '0'; attempt++) {
-            sleep time: 1, unit: 'SECONDS'
-            exitCode = execStatus("docker exec ${containerId} ${healthCommand}").toString()
-        }
-        assertValue(exitCode, '0', 'health with managed agent exit code')
         def jarCommand = isUnix()
             ? "test -f /jenkins/agent.jar"
             : "powershell.exe -NoProfile -Command \"if (-not (Test-Path -LiteralPath C:/jenkins/agent.jar)) { exit 1 }\""
+        def jarExitCode = '1'
+        for (int attempt = 0; attempt < 20 && jarExitCode != '0'; attempt++) {
+            sleep time: 1, unit: 'SECONDS'
+            jarExitCode = execStatus("docker exec ${containerId} ${jarCommand}").toString()
+        }
+        assertValue(jarExitCode, '0', 'controller agent JAR is adjacent to the entrypoint')
+        assertContains(
+            execStdout("docker logs ${containerId} 2>&1"),
+            'Setting up agent: Mörkö',
+            'Unicode agent name'
+        )
         assertValue(
-            execStatus("docker exec ${containerId} ${jarCommand}").toString(),
-            '0',
-            'controller agent JAR is adjacent to the entrypoint'
+            execStdout("docker inspect --format='{{.State.Running}}' ${containerId}").trim(),
+            'true',
+            'reconnecting agent process remains running'
+        )
+        assertValue(
+            execStatus("docker exec ${containerId} ${healthCommand}").toString(),
+            '1',
+            'reconnecting agent health exit code'
         )
     } finally {
         exec "docker rm --force --volumes ${containerId}"
+    }
+}
+
+def healthAcceptanceDockerfile() {
+    if (isUnix()) {
+        return '''FROM IMAGE_TO_TEST
+ARG JENKINS_URL
+COPY common/AgentHealthHook/AgentHealthHookAcceptance.java /tmp/agent-health-test/AgentHealthHookAcceptance.java
+RUN curl -fsSL "${JENKINS_URL%/}/jnlpJars/agent.jar" -o /tmp/agent-health-test/agent.jar && \
+    mkdir -p /tmp/agent-health-test/classes && \
+    javac -cp /tmp/agent-health-test/agent.jar \
+      -d /tmp/agent-health-test/classes /tmp/agent-health-test/AgentHealthHookAcceptance.java && \
+    JENKINS_HEALTH_FILE=/tmp/agent-health-test.status \
+    JENKINS_HEALTH_INTERVAL_SECONDS=1 \
+    JENKINS_HEALTH_TIMEOUT_SECONDS=1 \
+    JENKINS_HEALTH_STALE_SECONDS=3 \
+    java -javaagent:/jenkins/agent-health.jar \
+      -cp /tmp/agent-health-test/agent.jar:/tmp/agent-health-test/classes \
+      agent.health.AgentHealthHookAcceptance
+'''.replace('IMAGE_TO_TEST', candidateImage())
+    }
+    return '''# escape=`
+FROM IMAGE_TO_TEST
+SHELL ["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell", "-NonInteractive", "-NoProfile", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+ARG JENKINS_URL
+COPY common/AgentHealthHook/AgentHealthHookAcceptance.java C:/agent-health-test/AgentHealthHookAcceptance.java
+RUN curl.exe -fsSL ($env:JENKINS_URL.TrimEnd('/') + '/jnlpJars/agent.jar') -o C:/agent-health-test/agent.jar; `
+    if ($LASTEXITCODE -ne 0) { throw 'Failed to download controller agent JAR' }; `
+    New-Item -ItemType Directory -Path C:/agent-health-test/classes -Force | Out-Null; `
+    javac.exe -cp C:/agent-health-test/agent.jar -d C:/agent-health-test/classes C:/agent-health-test/AgentHealthHookAcceptance.java; `
+    if ($LASTEXITCODE -ne 0) { throw 'Failed to compile health acceptance test' }; `
+    $env:JENKINS_HEALTH_FILE = 'C:/agent-health-test.status'; `
+    $env:JENKINS_HEALTH_INTERVAL_SECONDS = '1'; `
+    $env:JENKINS_HEALTH_TIMEOUT_SECONDS = '1'; `
+    $env:JENKINS_HEALTH_STALE_SECONDS = '3'; `
+    java.exe -javaagent:C:/jenkins/agent-health.jar -cp 'C:/agent-health-test/agent.jar;C:/agent-health-test/classes' agent.health.AgentHealthHookAcceptance; `
+    if ($LASTEXITCODE -ne 0) { throw 'Health acceptance test failed' }
+'''.replace('IMAGE_TO_TEST', candidateImage())
+}
+
+def testHealthHook() {
+    def platform = isUnix() ? 'linux' : 'windows'
+    def testImage = "tmp/jenkins-agent-health-test:${env.BUILD_NUMBER}-${platform}"
+    writeFile file: 'Dockerfile.health-test', text: healthAcceptanceDockerfile()
+    try {
+        exec "docker build --build-arg JENKINS_URL=\"${env.JENKINS_URL}\" --tag ${testImage} --file Dockerfile.health-test ."
+    } finally {
+        execStatus "docker image rm --force ${testImage}"
     }
 }
 
@@ -295,6 +353,7 @@ def testImage() {
     testEntrypoint()
     testControllerAgent()
     testLiveHealth()
+    testHealthHook()
     def platformContract = isUnix()
         ? runContainer("sh -c '. /etc/os-release && test \"\$VERSION_CODENAME\" = trixie'", [], null, false)
         : runContainer('choco list --local-only --exact jenkins-agent --limit-output', [], null, false)
