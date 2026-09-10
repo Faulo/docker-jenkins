@@ -58,7 +58,9 @@ def environmentProbe(variable) {
 }
 
 def javaProbe() {
-    return isUnix() ? '/bin/echo' : 'C:/jenkins-java-probe/echo.exe'
+    return isUnix()
+        ? '/bin/echo'
+        : 'C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe'
 }
 
 def withProjectEnvironment(Closure body) {
@@ -72,7 +74,7 @@ def runContainer(arguments, environment = [], config = null, inheritEntrypoint =
     def containerId = execStdout("docker create ${entrypointArgument} ${environmentArguments} ${candidateImage()} ${arguments}").trim()
     try {
         if (!isUnix() && environment.any { it.startsWith('JENKINS_JAVA_BIN=') }) {
-            exec "docker cp jenkins-java-probe ${containerId}:C:/jenkins-java-probe"
+            exec "docker cp jenkins-java-probe.ps1 ${containerId}:C:/jenkins-java-probe.ps1"
         }
         if (config != null) {
             writeFile file: 'jenkins-agent-test.yml', text: config
@@ -89,10 +91,7 @@ def runContainer(arguments, environment = [], config = null, inheritEntrypoint =
 
 def testWebSocket() {
     if (!isUnix()) {
-        bat '''@if not exist jenkins-java-probe mkdir jenkins-java-probe
-@copy /y C:\\mingit\\usr\\bin\\echo.exe jenkins-java-probe\\echo.exe > NUL
-@copy /y C:\\mingit\\usr\\bin\\msys-2.0.dll jenkins-java-probe\\msys-2.0.dll > NUL
-'''
+        writeFile file: 'jenkins-java-probe.ps1', text: 'Write-Output ($args -join \' \')'
     }
     def baseEnvironment = [
         "JENKINS_URL=${env.JENKINS_URL}",
@@ -100,6 +99,9 @@ def testWebSocket() {
         'JENKINS_AGENT_NAME=argument-probe',
         "JENKINS_JAVA_BIN=${javaProbe()}"
     ]
+    if (!isUnix()) {
+        baseEnvironment.add('JENKINS_JAVA_OPTS=-NoProfile -File C:/jenkins-java-probe.ps1')
+    }
     def cases = [
         [description: 'default', value: null, enabled: true],
         [description: 'empty', value: '', enabled: true],
