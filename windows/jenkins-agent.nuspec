@@ -1,0 +1,19 @@
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>jenkins-agent</id>
+    <version>1.0.0</version>
+    <title>Jenkins agent tools</title>
+    <authors>Daniel Schulz</authors>
+    <description>Windows tools required by the Jenkins agent image.</description>
+    <dependencies>
+      <dependency id="microsoft-openjdk-21" />
+      <dependency id="git" />
+      <dependency id="powershell-core" />
+      <dependency id="nodejs" />
+      <dependency id="docker-cli" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

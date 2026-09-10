@@ -1,9 +1,11 @@
 # Cross-platform Jenkins inbound agent
 
 This repository builds Linux and Windows variants of one Docker image for
-Jenkins agents. Both variants extend the official
-[`jenkins/agent`](https://hub.docker.com/r/jenkins/agent) image and use Java
-21. The C# entrypoint launches Jenkins Remoting directly; the image does not
+Jenkins agents. The Linux variant uses Debian Trixie Slim, and the Windows
+variants use the matching .NET Framework 4.8 Windows Server Core runtime image.
+Linux installs Debian OpenJDK 21, Windows installs Microsoft OpenJDK 21, and
+both install Git with Git LFS. The C# entrypoint launches Jenkins Remoting
+directly; the image does not
 include or call the inbound-agent shell or PowerShell launchers.
 
 At each Jenkins-agent startup, the entrypoint downloads `jnlpJars/agent.jar`
@@ -22,9 +24,9 @@ Docker client; it does not contain or run a Docker daemon.
 
 | Variant | Dockerfile | Base image | Docker context |
 | --- | --- | --- | --- |
-| Linux | `linux/Dockerfile` | `jenkins/agent:trixie-jdk21` | `linux` |
-| Windows LTSC 2019 | `windows/Dockerfile` | `jenkins/agent:jdk21-windowsservercore-ltsc2019` | `windows` |
-| Windows LTSC 2022 | `windows/Dockerfile` | `jenkins/agent:jdk21-windowsservercore-ltsc2022` | `windows` |
+| Linux | `linux/Dockerfile` | `debian:trixie-slim` | `linux` |
+| Windows LTSC 2019 | `windows/Dockerfile` | `mcr.microsoft.com/dotnet/framework/runtime:4.8-windowsservercore-ltsc2019` | `windows` |
+| Windows LTSC 2022 | `windows/Dockerfile` | `mcr.microsoft.com/dotnet/framework/runtime:4.8-windowsservercore-ltsc2022` | `windows` |
 
 Both variants provide the same agent-level capabilities:
 
@@ -33,26 +35,30 @@ Both variants provide the same agent-level capabilities:
 | Jenkins Remoting runtime | Downloaded at startup | Downloaded at startup |
 | Java 21 | Yes | Yes |
 | Git and Git LFS | Yes | Yes |
-| Unity Version Control 11 CLI (`cm`) | Core client package | Client installer |
-| Docker CLI 29 | Client binary only | Client binary only |
-| Node.js 24 (`node`, `npm`, and `npx`) | Yes | Yes |
-| PowerShell 7 (`pwsh`) | Yes | Yes |
+| Unity Version Control CLI (`cm`) | Core client package | Client installer |
+| Docker CLI | Client binary only | Client binary only |
+| Node.js (`node`, `npm`, and `npx`) | Yes | Yes |
+| PowerShell (`pwsh`) | Yes | Yes |
 | Indexed YAML agent configuration | Yes | Yes |
 
 Docker Compose is intentionally not installed. The Jenkins Docker Pipeline
 plugin uses the Docker CLI directly and does not require Compose for
 `docker.image(...).inside { ... }`.
 
-Both Dockerfiles follow Docker major version 29, Node.js major version 24,
-PowerShell major version 7, and Unity Version Control major version 11. Each
-platform resolves and installs its newest available stable release in that
-major line during the build. Linux and Windows versions can differ when a
-release is not yet available for both platforms, but neither image silently
-upgrades to a new major version.
+Both Dockerfiles follow Java major version 21. Every other tool follows the
+newest package available from its configured APT or Chocolatey source at build
+time, including major-version upgrades. Linux and Windows versions can differ
+when their package repositories publish on different schedules.
 
-Remote package indexes are explicit Dockerfile inputs, so publishing a new
-compatible release invalidates the installation layer even when a previous
-build cache is available. Both variants currently target x86-64 hosts.
+The package managers refresh their indexes whenever the installation layer is
+executed. Both variants currently target x86-64 hosts.
+
+Linux runtime packages are declared in `linux/jenkins-agent.packages` and
+installed together through APT. NodeSource's moving current repository supplies
+Node.js and its bundled npm. On Windows, the corresponding dependencies are
+declared in `windows/jenkins-agent.nuspec` and installed together through
+Chocolatey. The Windows meta-package wraps Unity Version Control's signed
+vendor installer because it is not published as a Chocolatey package.
 
 The Linux container connects to
 `unix:///var/run/docker.sock`. The Windows container connects to
@@ -244,10 +250,6 @@ remote root. The `workspace` directory is deliberately a child of that root
 and is declared as a Docker volume in each image. It is the path to mount when
 workspace persistence or host access is required.
 
-Refer to the
-[`jenkins/agent` documentation](https://github.com/jenkinsci/docker-agents)
-for the underlying Java and tool image.
-
 ## Health check
 
 Both variants use `/jenkins/agent --health` or
@@ -269,8 +271,10 @@ exits.
 - `JAVA_OPTS` sets the Jenkins Git client operation timeout to 60 minutes.
 - Git treats every repository path as a safe directory. This avoids ownership
   checks for host-mounted workspaces but removes that Git security boundary.
-- Linux installs Docker from Docker's signed APT repository. The Windows Unity
-  Version Control installer must have a valid Unity Authenticode signature.
+- Linux consumes signed Debian, Microsoft, Docker, and NodeSource APT
+  repositories. Windows consumes the Chocolatey Community Repository for its
+  shared tool manifest, while the Unity Version Control installer must have a
+  valid Unity Authenticode signature.
 - The Linux Unity Version Control repository currently requires an
   unauthenticated APT install because its legacy repository signature is
   rejected by current Debian policy.

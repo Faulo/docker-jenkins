@@ -4,7 +4,7 @@ WORKDIR /solution
 
 COPY . .
 
-RUN dotnet publish docker-jenkins-agent.sln \
+RUN dotnet publish \
         --configuration Release \
         --runtime linux-x64 \
         --self-contained true \
@@ -12,97 +12,62 @@ RUN dotnet publish docker-jenkins-agent.sln \
         --property:UseAppHost=true \
         --property:DebugType=None
 
-FROM jenkins/agent:trixie-jdk21
+FROM debian:trixie-slim
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG DOCKER_MAJOR=29
-ARG NODE_MAJOR=24
-ARG PLASTIC_MAJOR=11
-ARG POWERSHELL_MAJOR=7
+
+# Package sources
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates && \
+    install -m 0755 -d /etc/apt/keyrings && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+ADD https://packages.microsoft.com/config/debian/13/packages-microsoft-prod.deb /tmp/packages-microsoft-prod.deb
+ADD https://download.docker.com/linux/debian/gpg /etc/apt/keyrings/docker.asc
+ADD https://deb.nodesource.com/setup_current.x /tmp/nodesource-setup
+
+RUN dpkg -i /tmp/packages-microsoft-prod.deb && \
+    chmod a+r /etc/apt/keyrings/docker.asc && \
+    echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian trixie stable' \
+      > /etc/apt/sources.list.d/docker.list && \
+    echo 'deb [trusted=yes allow-insecure=yes] https://www.plasticscm.com/plasticrepo/stable/debian ./' \
+      > /etc/apt/sources.list.d/plasticscm.list && \
+    bash /tmp/nodesource-setup && \
+    rm -f /tmp/packages-microsoft-prod.deb /tmp/nodesource-setup
+
+# Runtime tools
+COPY linux/jenkins-agent.packages /tmp/jenkins-agent.packages
+
+RUN apt-get update -o Acquire::AllowInsecureRepositories=true && \
+    xargs apt-get install -y --no-install-recommends < /tmp/jenkins-agent.packages && \
+    git lfs install --system && \
+    rm -f /tmp/jenkins-agent.packages && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    java -version && \
+    git --version && \
+    git lfs version && \
+    pwsh --version && \
+    node --version && \
+    npm --version && \
+    npx --version && \
+    docker --version && \
+    cm version
 
 # Jenkins
 USER root
 ENV USER=root \
     HOME=/root \
+    JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 \
     AGENT_WORKDIR=/jenkins \
     JENKINS_AGENT_WORKDIR=/jenkins \
-    JAVA_OPTS="-Dorg.jenkinsci.plugins.gitclient.Git.timeOut=60"
+    JAVA_OPTS="-Dorg.jenkinsci.plugins.gitclient.Git.timeOut=60" \
+    DOCKER_HOST=unix:///var/run/docker.sock
 WORKDIR /jenkins
 RUN mkdir -p /jenkins/workspace && \
-    java -version
+    git config --global --add safe.directory '*'
 VOLUME ["/jenkins/workspace"]
-
-# Git
-RUN git config --global --add safe.directory '*'
-
-# Node.js
-ADD https://nodejs.org/dist/latest-v${NODE_MAJOR}.x/SHASUMS256.txt /tmp/node-shasums
-
-RUN node_archive="$(sed -nE "s/^[0-9a-f]+  (node-v${NODE_MAJOR}\\.[0-9]+\\.[0-9]+-linux-x64\\.tar\\.gz)$/\\1/p" /tmp/node-shasums)" && \
-    test -n "$node_archive" && \
-    node_version="${node_archive#node-v}" && \
-    node_version="${node_version%-linux-x64.tar.gz}" && \
-    curl -fsSL "https://nodejs.org/dist/v${node_version}/${node_archive}" -o "/tmp/${node_archive}" && \
-    (cd /tmp && grep "  ${node_archive}$" node-shasums | sha256sum -c -) && \
-    tar -xzf "/tmp/${node_archive}" --strip-components=1 -C /usr/local && \
-    rm -f "/tmp/${node_archive}" /tmp/node-shasums && \
-    node --version | grep -E "^v${NODE_MAJOR}\\." && \
-    npm --version && \
-    npx --version
-
-# PowerShell
-ADD https://api.github.com/repos/PowerShell/PowerShell/releases?per_page=100 /tmp/powershell-releases.json
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends libicu76 && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    powershell_version="$(grep -oE "\"tag_name\"[[:space:]]*:[[:space:]]*\"v${POWERSHELL_MAJOR}\\.[0-9]+\\.[0-9]+\"" /tmp/powershell-releases.json | \
-        cut -d '"' -f 4 | tr -d v | sort -V | tail -n 1)" && \
-    test -n "$powershell_version" && \
-    powershell_archive="powershell-${powershell_version}-linux-x64.tar.gz" && \
-    powershell_url="https://github.com/PowerShell/PowerShell/releases/download/v${powershell_version}" && \
-    curl -fsSL "${powershell_url}/${powershell_archive}" -o "/tmp/${powershell_archive}" && \
-    curl -fsSL "${powershell_url}/hashes.sha256" -o /tmp/powershell-hashes && \
-    iconv -f UTF-16 -t UTF-8 /tmp/powershell-hashes | tr -d '\r' > /tmp/powershell-hashes.utf8 && \
-    (cd /tmp && grep " \\*${powershell_archive}$" powershell-hashes.utf8 | sha256sum -c -) && \
-    install -d "/opt/microsoft/powershell/${POWERSHELL_MAJOR}" && \
-    tar -xzf "/tmp/${powershell_archive}" -C "/opt/microsoft/powershell/${POWERSHELL_MAJOR}" && \
-    chmod +x "/opt/microsoft/powershell/${POWERSHELL_MAJOR}/pwsh" && \
-    ln -s "/opt/microsoft/powershell/${POWERSHELL_MAJOR}/pwsh" /usr/local/bin/pwsh && \
-    rm -f "/tmp/${powershell_archive}" /tmp/powershell-hashes /tmp/powershell-hashes.utf8 /tmp/powershell-releases.json && \
-    pwsh -NoLogo -NoProfile -Command \
-      "if (\$PSVersionTable.PSVersion.Major -ne ${POWERSHELL_MAJOR}) { exit 1 }"
-
-# Docker CLI
-ENV DOCKER_HOST=unix:///var/run/docker.sock
-
-# The remote index invalidates this layer when Docker publishes a release.
-ADD https://download.docker.com/linux/static/stable/x86_64/ /tmp/docker-versions
-
-RUN install -m 0755 -d /etc/apt/keyrings && \
-    curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
-      > /etc/apt/sources.list.d/docker.list && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends "docker-ce-cli=5:${DOCKER_MAJOR}.*" && \
-    rm -f /tmp/docker-versions /etc/apt/sources.list.d/docker.list /etc/apt/keyrings/docker.asc && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    docker --version | grep -E "^Docker version ${DOCKER_MAJOR}\."
-
-# Unity Version Control
-ADD https://www.plasticscm.com/plasticrepo/stable/debian/Packages /tmp/plastic-packages
-
-RUN echo 'deb [trusted=yes allow-insecure=yes] https://www.plasticscm.com/plasticrepo/stable/debian ./' \
-      > /etc/apt/sources.list.d/plasticscm.list && \
-    apt-get update -o Acquire::AllowInsecureRepositories=true && \
-    apt-get install -y --no-install-recommends --allow-unauthenticated \
-      "plasticscm-client-core=${PLASTIC_MAJOR}.*" && \
-    rm -f /tmp/plastic-packages /etc/apt/sources.list.d/plasticscm.list && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    cm version | grep -E "^${PLASTIC_MAJOR}\."
 
 COPY --from=build --chmod=755 /solution/common/Agent/bin/Release/net9.0/linux-x64/publish/agent /jenkins/agent
 
