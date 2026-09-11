@@ -264,7 +264,10 @@ def testLiveHealth() {
         "JENKINS_URL=${env.JENKINS_URL}",
         'JENKINS_SECRET=not-a-secret',
         'JENKINS_AGENT_NAME=Mörkö',
-        'JENKINS_WEB_SOCKET=true'
+        'JENKINS_WEB_SOCKET=true',
+        'JENKINS_HEALTH_INTERVAL_SECONDS=1',
+        'JENKINS_HEALTH_TIMEOUT_SECONDS=2',
+        'JENKINS_HEALTH_STALE_SECONDS=10'
     ].collect { "--env \"${it}\"" }.join(' ')
     def containerId = execStdout("docker create ${environmentArguments} ${candidateImage()}").trim()
     try {
@@ -294,10 +297,19 @@ def testLiveHealth() {
             'true',
             'reconnecting agent process remains running'
         )
+        def graceExitCode = '1'
+        for (int attempt = 0; attempt < 20 && graceExitCode != '0'; attempt++) {
+            graceExitCode = execStatus("docker exec ${containerId} ${healthCommand}").toString()
+            if (graceExitCode != '0') {
+                sleep time: 1, unit: 'SECONDS'
+            }
+        }
+        assertValue(graceExitCode, '0', 'starting agent health exit code during grace')
+        sleep time: 3, unit: 'SECONDS'
         assertValue(
             execStatus("docker exec ${containerId} ${healthCommand}").toString(),
             '1',
-            'reconnecting agent health exit code'
+            'starting agent health exit code after grace'
         )
     } finally {
         exec "docker rm --force --volumes ${containerId}"
@@ -315,8 +327,8 @@ RUN curl -fsSL "${JENKINS_URL%/}/jnlpJars/agent.jar" -o /tmp/agent-health-test/a
       -d /tmp/agent-health-test/classes /tmp/agent-health-test/AgentHealthMonitorAcceptance.java && \
     JENKINS_HEALTH_FILE=/tmp/agent-health-test.status \
     JENKINS_HEALTH_INTERVAL_SECONDS=1 \
-    JENKINS_HEALTH_TIMEOUT_SECONDS=1 \
-    JENKINS_HEALTH_STALE_SECONDS=3 \
+    JENKINS_HEALTH_TIMEOUT_SECONDS=2 \
+    JENKINS_HEALTH_STALE_SECONDS=10 \
     java -javaagent:/jenkins/launcher.jar \
       -cp /tmp/agent-health-test/agent.jar:/tmp/agent-health-test/classes \
       agent.health.AgentHealthMonitorAcceptance
@@ -334,8 +346,8 @@ RUN curl.exe -fsSL ($env:JENKINS_URL.TrimEnd('/') + '/jnlpJars/agent.jar') -o C:
     if ($LASTEXITCODE -ne 0) { throw 'Failed to compile health acceptance test' }; `
     $env:JENKINS_HEALTH_FILE = 'C:/agent-health-test.status'; `
     $env:JENKINS_HEALTH_INTERVAL_SECONDS = '1'; `
-    $env:JENKINS_HEALTH_TIMEOUT_SECONDS = '1'; `
-    $env:JENKINS_HEALTH_STALE_SECONDS = '3'; `
+    $env:JENKINS_HEALTH_TIMEOUT_SECONDS = '2'; `
+    $env:JENKINS_HEALTH_STALE_SECONDS = '10'; `
     java.exe -javaagent:C:/jenkins/launcher.jar -cp 'C:/agent-health-test/agent.jar;C:/agent-health-test/classes' agent.health.AgentHealthMonitorAcceptance; `
     if ($LASTEXITCODE -ne 0) { throw 'Health acceptance test failed' }
 '''.replace('IMAGE_TO_TEST', candidateImage())
