@@ -52,6 +52,17 @@ RUN java.exe -version; \
     cm.exe version; \
     if ($LASTEXITCODE -ne 0) { throw 'Unity Version Control smoke check failed' }
 
+# The hook uses reflection so it remains compatible with the controller-supplied Remoting JAR.
+COPY common/AgentHealthHook/AgentHealthHook.java common/AgentHealthHook/MANIFEST.MF C:/build/agent-health/
+
+RUN New-Item -ItemType Directory -Path C:/build/agent-health/classes, C:/jenkins -Force | Out-Null; \
+    javac.exe -d C:/build/agent-health/classes C:/build/agent-health/AgentHealthHook.java; \
+    if ($LASTEXITCODE -ne 0) { throw 'Failed to compile Jenkins Remoting health hook' }; \
+    jar.exe cfm C:/jenkins/agent-health.jar C:/build/agent-health/MANIFEST.MF \
+      -C C:/build/agent-health/classes .; \
+    if ($LASTEXITCODE -ne 0) { throw 'Failed to package Jenkins Remoting health hook' }; \
+    Remove-Item -LiteralPath C:/build/agent-health -Recurse -Force
+
 # Jenkins
 USER ContainerAdministrator
 ENV USER=ContainerAdministrator \

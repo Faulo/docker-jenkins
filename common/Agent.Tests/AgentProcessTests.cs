@@ -26,7 +26,8 @@ sealed class AgentProcessTests {
             ["-disableHttpsCertValidation"],
             environment,
             false,
-            "/jenkins/agent.jar"
+            "/jenkins/agent.jar",
+            "/jenkins/agent-health.jar"
         );
 
         Assert.Multiple(() => {
@@ -35,6 +36,7 @@ sealed class AgentProcessTests {
             Assert.That(start.ArgumentList.ToArray(), Is.EqualTo(new[] {
                 "-Xmx1g",
                 "-Dmessage=hello world",
+                "-javaagent:/jenkins/agent-health.jar",
                 "-jar", "/jenkins/agent.jar",
                 "-secret", "secret",
                 "-name", "agent name",
@@ -68,7 +70,13 @@ sealed class AgentProcessTests {
             "-webSocket"
         ];
 
-        var start = AgentProcess.JavaStartInfo(arguments, environment, false, "/jenkins/agent.jar");
+        var start = AgentProcess.JavaStartInfo(
+            arguments,
+            environment,
+            false,
+            "/jenkins/agent.jar",
+            "/jenkins/agent-health.jar"
+        );
 
         Assert.Multiple(() => {
             Assert.That(start.ArgumentList.ToArray(), Does.Not.Contain("environment-secret"));
@@ -85,7 +93,8 @@ sealed class AgentProcessTests {
             [],
             new Dictionary<string, string?> { ["JAVA_HOME"] = javaHome },
             windows,
-            windows ? "C:/jenkins/agent.jar" : "/jenkins/agent.jar"
+            windows ? "C:/jenkins/agent.jar" : "/jenkins/agent.jar",
+            windows ? "C:/jenkins/agent-health.jar" : "/jenkins/agent-health.jar"
         );
 
         Assert.That(start.FileName, Is.EqualTo(expected));
@@ -98,7 +107,8 @@ sealed class AgentProcessTests {
             [],
             new Dictionary<string, string?>(),
             windows,
-            windows ? "C:/jenkins/agent.jar" : "/jenkins/agent.jar"
+            windows ? "C:/jenkins/agent.jar" : "/jenkins/agent.jar",
+            windows ? "C:/jenkins/agent-health.jar" : "/jenkins/agent-health.jar"
         );
 
         Assert.That(start.FileName, Is.EqualTo(expected));
@@ -112,7 +122,13 @@ sealed class AgentProcessTests {
         };
 
         var exception = Assert.Throws<ConfigurationException>(() =>
-            AgentProcess.JavaStartInfo([], environment, false, "/jenkins/agent.jar")
+            AgentProcess.JavaStartInfo(
+                [],
+                environment,
+                false,
+                "/jenkins/agent.jar",
+                "/jenkins/agent-health.jar"
+            )
         );
 
         Assert.That(exception!.Message, Does.Contain("JENKINS_JAVA_OPTS").And.Not.Contain(configured));

@@ -253,21 +253,31 @@ workspace persistence or host access is required.
 ## Health check
 
 Both variants use `/jenkins/agent --health` or
-`C:/jenkins/agent.exe --health` as their Docker health check. The C# entrypoint
-owns a named operating-system mutex while the Java Remoting process is running,
-and the probe checks that ownership. No PID, status file, Java agent, or
-additional controller connection is involved.
+`C:/jenkins/agent.exe --health` as their Docker health check. A small Java agent
+inside the Remoting process monitors the active channel and performs a round
+trip to the controller every 10 seconds. It writes an atomic status record that
+the C# probe validates against the Java process and a 30-second freshness limit.
+The probe does not open an additional controller connection.
 
-The probe deliberately reports process liveness rather than inventing a second
-Remoting health protocol. Jenkins Remoting performs its normal channel pings,
-disconnect, and reconnection behavior. If the managed Java process exits, the
-C# entrypoint returns its exit code, releases the mutex, and the container
-exits.
+Only a fresh successful round trip is healthy. Startup, a channel that has not
+yet completed its first round trip, and every reconnect state are unhealthy.
+Docker's 30-second start period and three consecutive retries provide the grace
+period for normal startup and brief controller interruptions. A persistent
+reconnect loop therefore changes the container's visible health state to
+`unhealthy` while the Remoting process continues trying to reconnect.
+
+`JENKINS_HEALTH_INTERVAL_SECONDS`, `JENKINS_HEALTH_TIMEOUT_SECONDS`, and
+`JENKINS_HEALTH_STALE_SECONDS` override the 10-second interval, 5-second round
+trip timeout, and 30-second freshness limit. All must be positive integer
+seconds. `JENKINS_HEALTH_FILE` overrides the platform-specific status path,
+primarily for diagnostics.
 
 ## Runtime defaults and security
 
 - Linux processes run as `root`; Windows processes run as
   `ContainerAdministrator`.
+- Linux uses the built-in `C.UTF-8` locale so Java preserves non-ASCII agent
+  names in native protocol data.
 - `JAVA_OPTS` sets the Jenkins Git client operation timeout to 60 minutes.
 - Git treats every repository path as a safe directory. This avoids ownership
   checks for host-mounted workspaces but removes that Git security boundary.

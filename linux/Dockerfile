@@ -55,10 +55,20 @@ RUN apt-get update -o Acquire::AllowInsecureRepositories=true && \
     docker --version && \
     cm version
 
+# The hook uses reflection so it remains compatible with the controller-supplied Remoting JAR.
+COPY common/AgentHealthHook/AgentHealthHook.java common/AgentHealthHook/MANIFEST.MF /tmp/agent-health/
+
+RUN mkdir -p /tmp/agent-health/classes /jenkins && \
+    javac -d /tmp/agent-health/classes /tmp/agent-health/AgentHealthHook.java && \
+    jar cfm /jenkins/agent-health.jar /tmp/agent-health/MANIFEST.MF \
+      -C /tmp/agent-health/classes . && \
+    rm -rf /tmp/agent-health
+
 # Jenkins
 USER root
 ENV USER=root \
     HOME=/root \
+    LANG=C.UTF-8 \
     JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 \
     AGENT_WORKDIR=/jenkins \
     JENKINS_AGENT_WORKDIR=/jenkins \

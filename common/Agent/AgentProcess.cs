@@ -36,7 +36,17 @@ static class AgentProcess {
         string agentJarArgument = OperatingSystem.IsWindows()
             ? agentJar.Replace('\\', '/')
             : agentJar;
-        var start = JavaStartInfo(arguments, environment, OperatingSystem.IsWindows(), agentJarArgument);
+        string healthHook = AgentHealth.HookPath(AppContext.BaseDirectory);
+        string healthHookArgument = OperatingSystem.IsWindows()
+            ? healthHook.Replace('\\', '/')
+            : healthHook;
+        var start = JavaStartInfo(
+            arguments,
+            environment,
+            OperatingSystem.IsWindows(),
+            agentJarArgument,
+            healthHookArgument
+        );
         using var supervisor = AgentSupervisor.Acquire();
         return RunProcess(start, OperatingSystem.IsLinux());
     }
@@ -45,7 +55,8 @@ static class AgentProcess {
         IReadOnlyList<string> arguments,
         IReadOnlyDictionary<string, string?> environment,
         bool windows,
-        string agentJar
+        string agentJar,
+        string healthHook
     ) {
         string? javaOptions = Read(environment, JENKINS_JAVA_OPTS);
         string javaOptionsName = JENKINS_JAVA_OPTS;
@@ -59,6 +70,7 @@ static class AgentProcess {
             UseShellExecute = false
         };
         AddOptions(start, javaOptionsName, javaOptions);
+        start.ArgumentList.Add($"-javaagent:{healthHook}");
         start.ArgumentList.Add("-jar");
         start.ArgumentList.Add(agentJar);
 
