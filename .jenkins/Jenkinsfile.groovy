@@ -288,8 +288,9 @@ def testLiveHealth() {
                 'Unicode agent name'
             )
         }
+        def inspectFormat = isUnix() ? "'{{.State.Running}}'" : '"{{.State.Running}}"'
         assertValue(
-            execStdout("docker inspect --format='{{.State.Running}}' ${containerId}").trim(),
+            execStdout("docker inspect --format=${inspectFormat} ${containerId}").trim(),
             'true',
             'reconnecting agent process remains running'
         )
