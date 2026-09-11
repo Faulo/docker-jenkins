@@ -1,0 +1,5 @@
+# opt-in .idea files explicitly
+*
+
+!.gitignore
+!codeStyles/
