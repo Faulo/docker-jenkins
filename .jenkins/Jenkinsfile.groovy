@@ -253,10 +253,10 @@ def testControllerAgent() {
     }
 
     def runtimeCommand = isUnix()
-        ? "sh -c 'test -s /jenkins/agent-health.jar && test ! -e /usr/local/bin/jenkins-agent'"
-        : "powershell.exe -NoProfile -Command \"if (-not (Test-Path -LiteralPath C:/jenkins/agent-health.jar) -or (Test-Path -LiteralPath C:/ProgramData/Jenkins/jenkins-agent.ps1)) { exit 1 }\""
+        ? "sh -c 'test -s /jenkins/launcher.jar && test ! -e /jenkins/agent && test ! -e /jenkins/agent-health.jar && test ! -e /usr/local/bin/jenkins-agent'"
+        : "powershell.exe -NoProfile -Command \"if (-not (Test-Path -LiteralPath C:/jenkins/launcher.jar) -or (Test-Path -LiteralPath C:/jenkins/agent.exe) -or (Test-Path -LiteralPath C:/jenkins/agent-health.jar) -or (Test-Path -LiteralPath C:/ProgramData/Jenkins/jenkins-agent.ps1)) { exit 1 }\""
     def runtime = runContainer(runtimeCommand, [], null, false)
-    assertValue(runtime.exitCode, '0', 'runtime image contains health hook without upstream launcher')
+    assertValue(runtime.exitCode, '0', 'runtime image contains only the Java launcher')
 }
 
 def testLiveHealth() {
