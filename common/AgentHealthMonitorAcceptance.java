@@ -18,10 +18,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-public final class AgentHealthHookAcceptance {
+public final class AgentHealthMonitorAcceptance {
     private static final Duration WAIT = Duration.ofSeconds(15);
 
-    private AgentHealthHookAcceptance() {
+    private AgentHealthMonitorAcceptance() {
     }
 
     public static void main(String[] arguments) {
@@ -47,13 +47,10 @@ public final class AgentHealthHookAcceptance {
     }
 
     private static void assertHealthProbe(boolean expectedHealthy) throws Exception {
-        String configuredExecutable = System.getenv("JENKINS_HEALTH_COMMAND");
-        String executable = configuredExecutable == null || configuredExecutable.isBlank()
-            ? System.getProperty("os.name").startsWith("Windows")
-                ? "C:/jenkins/agent.exe"
-                : "/jenkins/agent"
-            : configuredExecutable;
-        Process process = new ProcessBuilder(executable, "--health")
+        boolean windows = System.getProperty("os.name").startsWith("Windows");
+        String java = windows ? "java.exe" : "java";
+        String launcher = windows ? "C:/jenkins/launcher.jar" : "/jenkins/launcher.jar";
+        Process process = new ProcessBuilder(java, "-jar", launcher, "--health")
             .redirectErrorStream(true)
             .start();
         if (!process.waitFor(2, TimeUnit.SECONDS)) {

@@ -270,8 +270,8 @@ def testLiveHealth() {
     try {
         exec "docker start ${containerId}"
         def healthCommand = isUnix()
-            ? "/jenkins/agent --health"
-            : "C:/jenkins/agent.exe --health"
+            ? "java -jar /jenkins/launcher.jar --health"
+            : "java.exe -jar C:/jenkins/launcher.jar --health"
         def jarCommand = isUnix()
             ? "test -f /jenkins/agent.jar"
             : "powershell.exe -NoProfile -Command \"if (-not (Test-Path -LiteralPath C:/jenkins/agent.jar)) { exit 1 }\""
@@ -308,35 +308,35 @@ def healthAcceptanceDockerfile() {
     if (isUnix()) {
         return '''FROM IMAGE_TO_TEST
 ARG JENKINS_URL
-COPY common/AgentHealthHook/AgentHealthHookAcceptance.java /tmp/agent-health-test/AgentHealthHookAcceptance.java
+COPY common/AgentHealthMonitorAcceptance.java /tmp/agent-health-test/AgentHealthMonitorAcceptance.java
 RUN curl -fsSL "${JENKINS_URL%/}/jnlpJars/agent.jar" -o /tmp/agent-health-test/agent.jar && \
     mkdir -p /tmp/agent-health-test/classes && \
     javac -cp /tmp/agent-health-test/agent.jar \
-      -d /tmp/agent-health-test/classes /tmp/agent-health-test/AgentHealthHookAcceptance.java && \
+      -d /tmp/agent-health-test/classes /tmp/agent-health-test/AgentHealthMonitorAcceptance.java && \
     JENKINS_HEALTH_FILE=/tmp/agent-health-test.status \
     JENKINS_HEALTH_INTERVAL_SECONDS=1 \
     JENKINS_HEALTH_TIMEOUT_SECONDS=1 \
     JENKINS_HEALTH_STALE_SECONDS=3 \
-    java -javaagent:/jenkins/agent-health.jar \
+    java -javaagent:/jenkins/launcher.jar \
       -cp /tmp/agent-health-test/agent.jar:/tmp/agent-health-test/classes \
-      agent.health.AgentHealthHookAcceptance
+      agent.health.AgentHealthMonitorAcceptance
 '''.replace('IMAGE_TO_TEST', candidateImage())
     }
     return '''# escape=`
 FROM IMAGE_TO_TEST
 SHELL ["C:\\\\Windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\powershell", "-NonInteractive", "-NoProfile", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 ARG JENKINS_URL
-COPY common/AgentHealthHook/AgentHealthHookAcceptance.java C:/agent-health-test/AgentHealthHookAcceptance.java
+COPY common/AgentHealthMonitorAcceptance.java C:/agent-health-test/AgentHealthMonitorAcceptance.java
 RUN curl.exe -fsSL ($env:JENKINS_URL.TrimEnd('/') + '/jnlpJars/agent.jar') -o C:/agent-health-test/agent.jar; `
     if ($LASTEXITCODE -ne 0) { throw 'Failed to download controller agent JAR' }; `
     New-Item -ItemType Directory -Path C:/agent-health-test/classes -Force | Out-Null; `
-    javac.exe -cp C:/agent-health-test/agent.jar -d C:/agent-health-test/classes C:/agent-health-test/AgentHealthHookAcceptance.java; `
+    javac.exe -cp C:/agent-health-test/agent.jar -d C:/agent-health-test/classes C:/agent-health-test/AgentHealthMonitorAcceptance.java; `
     if ($LASTEXITCODE -ne 0) { throw 'Failed to compile health acceptance test' }; `
     $env:JENKINS_HEALTH_FILE = 'C:/agent-health-test.status'; `
     $env:JENKINS_HEALTH_INTERVAL_SECONDS = '1'; `
     $env:JENKINS_HEALTH_TIMEOUT_SECONDS = '1'; `
     $env:JENKINS_HEALTH_STALE_SECONDS = '3'; `
-    java.exe -javaagent:C:/jenkins/agent-health.jar -cp 'C:/agent-health-test/agent.jar;C:/agent-health-test/classes' agent.health.AgentHealthHookAcceptance; `
+    java.exe -javaagent:C:/jenkins/launcher.jar -cp 'C:/agent-health-test/agent.jar;C:/agent-health-test/classes' agent.health.AgentHealthMonitorAcceptance; `
     if ($LASTEXITCODE -ne 0) { throw 'Health acceptance test failed' }
 '''.replace('IMAGE_TO_TEST', candidateImage())
 }
