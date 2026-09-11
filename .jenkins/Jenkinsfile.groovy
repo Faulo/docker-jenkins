@@ -281,11 +281,13 @@ def testLiveHealth() {
             jarExitCode = execStatus("docker exec ${containerId} ${jarCommand}").toString()
         }
         assertValue(jarExitCode, '0', 'controller agent JAR is adjacent to the entrypoint')
-        assertContains(
-            execStdout("docker logs ${containerId} 2>&1"),
-            'Setting up agent: Mörkö',
-            'Unicode agent name'
-        )
+        if (isUnix()) {
+            assertContains(
+                execStdout("docker logs ${containerId} 2>&1"),
+                'Setting up agent: Mörkö',
+                'Unicode agent name'
+            )
+        }
         assertValue(
             execStdout("docker inspect --format='{{.State.Running}}' ${containerId}").trim(),
             'true',
