@@ -1,10 +1,11 @@
-package agent.health;
+package io.github.faulo.jenkins.agent;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
@@ -21,13 +22,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public final class AgentHealthHook {
+public final class AgentHealthMonitor {
     private static final int DEFAULT_INTERVAL_SECONDS = 10;
     private static final int DEFAULT_TIMEOUT_SECONDS = 5;
 
-    private AgentHealthHook() {
+    private AgentHealthMonitor() {
     }
 
+    @SuppressWarnings("unused")
     public static void premain(String arguments) throws IOException {
         Monitor monitor = new Monitor();
         try {
@@ -56,7 +58,7 @@ public final class AgentHealthHook {
         private ExecutorService roundTripExecutor;
 
         private Monitor() {
-            String configuredFile = System.getenv("JENKINS_HEALTH_FILE");
+            String configuredFile = System.getenv(AgentHealth.HEALTH_FILE);
             statusFile = Path.of(configuredFile == null || configuredFile.isBlank()
                 ? isWindows() ? "C:/jenkins/agent-health.status" : "/jenkins/agent-health.status"
                 : configuredFile);
@@ -103,7 +105,6 @@ public final class AgentHealthHook {
                 writeStatusIgnoringFailure();
                 return;
             }
-
             if (channel != currentChannel) {
                 closeRoundTripExecutor();
                 currentChannel = channel;
@@ -115,7 +116,6 @@ public final class AgentHealthHook {
                     return thread;
                 });
             }
-
             performRoundTrip(channel);
             writeStatusIgnoringFailure();
         }
@@ -181,21 +181,11 @@ public final class AgentHealthHook {
             Path absoluteFile = statusFile.toAbsolutePath();
             Files.createDirectories(absoluteFile.getParent());
             Path temporaryFile = absoluteFile.resolveSibling(absoluteFile.getFileName() + ".tmp-" + pid);
-            Files.writeString(
-                temporaryFile,
-                content,
-                StandardCharsets.UTF_8,
-                StandardOpenOption.CREATE,
-                StandardOpenOption.TRUNCATE_EXISTING,
-                StandardOpenOption.WRITE
-            );
+            Files.writeString(temporaryFile, content, StandardCharsets.UTF_8, StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
             try {
-                Files.move(
-                    temporaryFile,
-                    absoluteFile,
-                    StandardCopyOption.ATOMIC_MOVE,
-                    StandardCopyOption.REPLACE_EXISTING
-                );
+                Files.move(temporaryFile, absoluteFile, StandardCopyOption.ATOMIC_MOVE,
+                    StandardCopyOption.REPLACE_EXISTING);
             } catch (AtomicMoveNotSupportedException exception) {
                 Files.move(temporaryFile, absoluteFile, StandardCopyOption.REPLACE_EXISTING);
             }
@@ -208,25 +198,39 @@ public final class AgentHealthHook {
                 // A missing heartbeat makes the external health check fail closed.
             }
         }
+    }
 
-        private static Object findActiveChannel() throws ReflectiveOperationException {
-            Class<?> channelClass = Class.forName("hudson.remoting.Channel");
-            Field activeChannelsField = channelClass.getDeclaredField("ACTIVE_CHANNELS");
-            activeChannelsField.setAccessible(true);
-            Object activeChannelsValue = activeChannelsField.get(null);
-            if (!(activeChannelsValue instanceof Map<?, ?> activeChannels)) {
-                throw new IllegalStateException("unexpected Remoting channel registry");
-            }
-            Method isClosingOrClosed = channelClass.getMethod("isClosingOrClosed");
-            synchronized (activeChannels) {
-                for (Object candidate : activeChannels.keySet()) {
-                    if (channelClass.isInstance(candidate)
-                        && !((Boolean) isClosingOrClosed.invoke(candidate))) {
-                        return candidate;
-                    }
+    private static Object findActiveChannel() throws ReflectiveOperationException {
+        Class<?> channelClass = Class.forName("hudson.remoting.Channel");
+        Field registry = findChannelRegistry(channelClass);
+        registry.setAccessible(true);
+        Object registryValue = registry.get(null);
+        if (!(registryValue instanceof Map<?, ?> activeChannels)) {
+            throw new IllegalStateException("unexpected Remoting channel registry");
+        }
+        Method isClosingOrClosed = channelClass.getMethod("isClosingOrClosed");
+        // Remoting protects its weak registry with the registry object's monitor.
+        //noinspection SynchronizationOnLocalVariableOrMethodParameter
+        synchronized (activeChannels) {
+            for (Object candidate : activeChannels.keySet()) {
+                if (channelClass.isInstance(candidate) && !((Boolean) isClosingOrClosed.invoke(candidate))) {
+                    return candidate;
                 }
             }
-            return null;
+        }
+        return null;
+    }
+
+    private static Field findChannelRegistry(Class<?> channelClass) throws NoSuchFieldException {
+        try {
+            return channelClass.getDeclaredField("ACTIVE_CHANNELS");
+        } catch (NoSuchFieldException exception) {
+            for (Field field : channelClass.getDeclaredFields()) {
+                if (Modifier.isStatic(field.getModifiers()) && Map.class.isAssignableFrom(field.getType())) {
+                    return field;
+                }
+            }
+            throw exception;
         }
     }
 

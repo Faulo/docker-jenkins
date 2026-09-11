@@ -1,16 +1,11 @@
-FROM mcr.microsoft.com/dotnet/sdk:9.0-bookworm-slim AS build
+FROM maven:3-eclipse-temurin-21 AS build
 
 WORKDIR /solution
 
-COPY . .
+COPY pom.xml .
+COPY src/ src/
 
-RUN dotnet publish \
-        --configuration Release \
-        --runtime linux-x64 \
-        --self-contained true \
-        --property:PublishSingleFile=true \
-        --property:UseAppHost=true \
-        --property:DebugType=None
+RUN mvn --batch-mode --no-transfer-progress verify
 
 FROM debian:trixie-slim
 
@@ -55,15 +50,6 @@ RUN apt-get update -o Acquire::AllowInsecureRepositories=true && \
     docker --version && \
     cm version
 
-# The hook uses reflection so it remains compatible with the controller-supplied Remoting JAR.
-COPY common/AgentHealthHook/AgentHealthHook.java common/AgentHealthHook/MANIFEST.MF /tmp/agent-health/
-
-RUN mkdir -p /tmp/agent-health/classes /jenkins && \
-    javac -d /tmp/agent-health/classes /tmp/agent-health/AgentHealthHook.java && \
-    jar cfm /jenkins/agent-health.jar /tmp/agent-health/MANIFEST.MF \
-      -C /tmp/agent-health/classes . && \
-    rm -rf /tmp/agent-health
-
 # Jenkins
 USER root
 ENV USER=root \
@@ -79,9 +65,9 @@ RUN mkdir -p /jenkins/workspace && \
     git config --global --add safe.directory '*'
 VOLUME ["/jenkins/workspace"]
 
-COPY --from=build --chmod=755 /solution/common/Agent/bin/Release/net9.0/linux-x64/publish/agent /jenkins/agent
+COPY --from=build --chmod=644 /solution/target/launcher.jar /jenkins/launcher.jar
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD ["/jenkins/agent", "--health"]
+    CMD ["java", "-jar", "/jenkins/launcher.jar", "--health"]
 
-ENTRYPOINT ["/jenkins/agent"]
+ENTRYPOINT ["java", "-jar", "/jenkins/launcher.jar"]

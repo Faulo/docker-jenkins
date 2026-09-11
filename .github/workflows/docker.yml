@@ -5,9 +5,9 @@ on:
         branches:
             - "main"
         paths:
-            - "common/Agent/**"
+            - "pom.xml"
+            - "src/**"
             - ".dockerignore"
-            - "Directory.Build.props"
             - "linux/**"
             - "windows/**"
             - ".github/workflows/docker.yml"

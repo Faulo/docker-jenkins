@@ -4,12 +4,14 @@ This repository builds Linux and Windows variants of one Docker image for
 Jenkins agents. The Linux variant uses Debian Trixie Slim, and the Windows
 variants use the matching .NET Framework 4.8 Windows Server Core runtime image.
 Linux installs Debian OpenJDK 21, Windows installs Microsoft OpenJDK 21, and
-both install Git with Git LFS. The C# entrypoint launches Jenkins Remoting
-directly; the image does not
-include or call the inbound-agent shell or PowerShell launchers.
+both install Git with Git LFS. A shared Java entrypoint launches Jenkins
+Remoting directly; the image does not include or call the inbound-agent shell
+or PowerShell launchers. The Windows base remains the .NET Framework runtime
+because Chocolatey requires Windows PowerShell and .NET Framework; the agent
+entrypoint itself does not use .NET.
 
 At each Jenkins-agent startup, the entrypoint downloads `jnlpJars/agent.jar`
-from `JENKINS_URL` to the directory containing `agent` or `agent.exe`. This
+from `JENKINS_URL` next to `/jenkins/launcher.jar`. This
 keeps Remoting aligned with the controller instead of the image's build date.
 The download is validated and installed atomically. Startup fails if the
 controller URL is missing, invalid, or does not return a JAR.
@@ -89,6 +91,10 @@ The project configuration in `.env` sets the image name. With the repository's
 default configuration, local builds are tagged as
 `tmp/jenkins-agent:latest`.
 
+Both Dockerfiles compile and test the Maven project in `src/` before assembling
+the runtime image. Opening the repository root as a Maven project in IntelliJ
+uses Java 21 and the checked-in `pom.xml` directly.
+
 Build directly from the repository root:
 
 ```text
@@ -149,7 +155,7 @@ services:
       JENKINS_AGENT_NAME: yyy
 ```
 
-The C# entrypoint also accepts Remoting connection arguments through `command`.
+The Java entrypoint also accepts Remoting connection arguments through `command`.
 `JENKINS_URL` must still be present in the environment because it identifies
 the controller that supplies `jnlpJars/agent.jar`:
 
@@ -252,12 +258,13 @@ workspace persistence or host access is required.
 
 ## Health check
 
-Both variants use `/jenkins/agent --health` or
-`C:/jenkins/agent.exe --health` as their Docker health check. A small Java agent
-inside the Remoting process monitors the active channel and performs a round
-trip to the controller every 10 seconds. It writes an atomic status record that
-the C# probe validates against the Java process and a 30-second freshness limit.
-The probe does not open an additional controller connection.
+Both variants use `java -jar /jenkins/launcher.jar --health` (with the
+corresponding `C:/jenkins` path on Windows) as their Docker health check. The
+same JAR is loaded as a Java agent inside the Remoting process, where it
+monitors the active channel and performs a round trip to the controller every
+10 seconds. It writes an atomic status record that the Java probe validates
+against the Remoting process and a 30-second freshness limit. The probe does
+not open an additional controller connection.
 
 Only a fresh successful round trip is healthy. Startup, a channel that has not
 yet completed its first round trip, and every reconnect state are unhealthy.

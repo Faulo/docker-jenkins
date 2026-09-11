@@ -1,20 +1,21 @@
 ARG OS_BASE=ltsc2019
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0-nanoserver-1809 AS build
+FROM mcr.microsoft.com/dotnet/framework/runtime:4.8-windowsservercore-${OS_BASE} AS build
+
+SHELL ["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell", "-NonInteractive", "-NoProfile", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+
+RUN Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')); \
+    if (-not (Get-Command choco -ErrorAction SilentlyContinue)) { throw 'Chocolatey installation failed' }; \
+    choco install microsoft-openjdk-21 maven --yes --no-progress --limit-output; \
+    if ($LASTEXITCODE -notin 0, 1641, 3010) { throw ('Build dependencies failed with exit code {0}' -f $LASTEXITCODE) }
 
 WORKDIR C:/solution
 
-ENV NUGET_PACKAGES=C:/nuget/packages
+COPY pom.xml .
+COPY src/ src/
 
-COPY . .
-
-RUN dotnet publish \
-        --configuration Release \
-        --runtime win-x64 \
-        --self-contained true \
-        --property:PublishSingleFile=true \
-        --property:UseAppHost=true \
-        --property:DebugType=None
+RUN mvn.cmd --batch-mode --no-transfer-progress verify; \
+    if ($LASTEXITCODE -ne 0) { throw ('Maven build failed with exit code {0}' -f $LASTEXITCODE) }
 
 FROM mcr.microsoft.com/dotnet/framework/runtime:4.8-windowsservercore-${OS_BASE}
 
@@ -52,17 +53,6 @@ RUN java.exe -version; \
     cm.exe version; \
     if ($LASTEXITCODE -ne 0) { throw 'Unity Version Control smoke check failed' }
 
-# The hook uses reflection so it remains compatible with the controller-supplied Remoting JAR.
-COPY common/AgentHealthHook/AgentHealthHook.java common/AgentHealthHook/MANIFEST.MF C:/build/agent-health/
-
-RUN New-Item -ItemType Directory -Path C:/build/agent-health/classes, C:/jenkins -Force | Out-Null; \
-    javac.exe -d C:/build/agent-health/classes C:/build/agent-health/AgentHealthHook.java; \
-    if ($LASTEXITCODE -ne 0) { throw 'Failed to compile Jenkins Remoting health hook' }; \
-    jar.exe cfm C:/jenkins/agent-health.jar C:/build/agent-health/MANIFEST.MF \
-      -C C:/build/agent-health/classes .; \
-    if ($LASTEXITCODE -ne 0) { throw 'Failed to package Jenkins Remoting health hook' }; \
-    Remove-Item -LiteralPath C:/build/agent-health -Recurse -Force
-
 # Jenkins
 USER ContainerAdministrator
 ENV USER=ContainerAdministrator \
@@ -76,9 +66,9 @@ RUN New-Item -ItemType Directory -Path C:/jenkins/workspace -Force | Out-Null; \
     git config --global --add safe.directory *
 VOLUME ["C:/jenkins/workspace"]
 
-COPY --from=build C:/solution/common/Agent/bin/Release/net9.0/win-x64/publish/agent.exe C:/jenkins/agent.exe
+COPY --from=build C:/solution/target/launcher.jar C:/jenkins/launcher.jar
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD ["C:/jenkins/agent.exe", "--health"]
+    CMD ["java.exe", "-jar", "C:/jenkins/launcher.jar", "--health"]
 
-ENTRYPOINT ["C:/jenkins/agent.exe"]
+ENTRYPOINT ["java.exe", "-jar", "C:/jenkins/launcher.jar"]
