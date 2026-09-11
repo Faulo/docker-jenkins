@@ -324,7 +324,7 @@ RUN curl -fsSL "${JENKINS_URL%/}/jnlpJars/agent.jar" -o /tmp/agent-health-test/a
     }
     return '''# escape=`
 FROM IMAGE_TO_TEST
-SHELL ["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell", "-NonInteractive", "-NoProfile", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+SHELL ["C:\\\\Windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\powershell", "-NonInteractive", "-NoProfile", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 ARG JENKINS_URL
 COPY common/AgentHealthHook/AgentHealthHookAcceptance.java C:/agent-health-test/AgentHealthHookAcceptance.java
 RUN curl.exe -fsSL ($env:JENKINS_URL.TrimEnd('/') + '/jnlpJars/agent.jar') -o C:/agent-health-test/agent.jar; `
